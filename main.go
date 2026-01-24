@@ -68,7 +68,7 @@ func initListCmd(manager *addon.Manager) *cobra.Command {
 		Use:   "list",
 		Short: "List all installed addons",
 		Run: func(cmd *cobra.Command, args []string) {
-			addons, err := manager.ListAddons()
+			addons, err := manager.GetAddonsInfo()
 			if err != nil {
 				fmt.Printf("Error listing addons: %v\n", err)
 				os.Exit(1)
