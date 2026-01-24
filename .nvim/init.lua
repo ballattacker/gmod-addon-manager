@@ -36,6 +36,6 @@ end
 -- vim.keymap.set({ "n" }, "<leader>pr", function()
 -- 	os.exec(string.format("odin run %s -out:%s/odin", vim.fn.getcwd(), outdir))
 -- end)
-vim.keymap.set({ "n" }, "<leader>pb", function()
-	os.exec(string.format("./build.sh"))
+vim.keymap.set({ "n" }, "<leader>pbw", function()
+	os.exec(string.format("./build-windows.sh"))
 end)
