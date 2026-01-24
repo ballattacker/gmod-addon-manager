@@ -37,6 +37,14 @@ func NewModel(manager *addon.Manager) model {
 	// Create the list with custom delegate
 	addonList := list.New(items, newItemDelegate(newDelegateKeyMap()), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
+	addonList.KeyMap.PrevPage = key.NewBinding(
+		key.WithKeys("left", "h", "pgup"),
+		key.WithHelp("←/h/pgup", "prev page"),
+	)
+	addonList.KeyMap.NextPage = key.NewBinding(
+		key.WithKeys("right", "l", "pgdown"),
+		key.WithHelp("→/l/pgdn", "next page"),
+	)
 
 	// Initialize text input
 	input := textinput.New()
@@ -44,13 +52,13 @@ func NewModel(manager *addon.Manager) model {
 	input.Focus()
 
 	return model{
-		list:          addonList,
-		manager:       manager,
-		input:         input,
-		state:         "list",
-		loading:       false,
-		keys:          newListKeyMap(),
-		delegateKeys:  newDelegateKeyMap(),
+		list:         addonList,
+		manager:      manager,
+		input:        input,
+		state:        "list",
+		loading:      false,
+		keys:         newListKeyMap(),
+		delegateKeys: newDelegateKeyMap(),
 	}
 }
 
@@ -119,11 +127,11 @@ func (k *listKeyMap) FullHelp() [][]key.Binding {
 }
 
 type delegateKeyMap struct {
-	choose key.Binding
-	enable key.Binding
-	disable key.Binding
+	choose       key.Binding
+	enable       key.Binding
+	disable      key.Binding
 	refreshCache key.Binding
-	remove key.Binding
+	remove       key.Binding
 }
 
 func newDelegateKeyMap() *delegateKeyMap {

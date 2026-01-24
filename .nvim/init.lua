@@ -38,4 +38,4 @@ end
 -- end)
 vim.keymap.set({ "n" }, "<leader>pbw", function()
 	os.exec(string.format("./build-windows.sh"))
-end)
+end, { desc = "build for windows" })
