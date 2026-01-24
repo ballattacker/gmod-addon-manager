@@ -1,7 +1,7 @@
 # 🎮 GMod Addon Manager
 
 [![Release](https://img.shields.io/github/v/release/ballattacker/gmod-addon-manager?style=flat-square)](https://github.com/ballattacker/gmod-addon-manager/releases)
-[![License](https://img.shields.io/github/license/ballattacker/gmod-addon-manager?style=flat-square)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 [![Go](https://img.shields.io/github/go-mod/go-version/ballattacker/gmod-addon-manager?style=flat-square)](go.mod)
 
 A terminal-based application for downloading, installing, and managing Garry's Mod addons from the Steam Workshop.
@@ -87,4 +87,4 @@ Check out the [Releases page](https://github.com/ballattacker/gmod-addon-manager
 
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the [GNU GPLv3 License](LICENSE).
