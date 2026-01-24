@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	titleStyle      = lipgloss.NewStyle().MarginLeft(2)
+	paginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 )
 
 type model struct {
@@ -89,13 +89,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			if m.state == "list" {
+			switch m.state {
+			case "list":
 				if len(m.list.Items()) > 0 {
 					selected := m.list.SelectedItem().(addonItem)
 					m.selectedAddon = &selected.addon
 					m.state = "detail"
 				}
-			} else if m.state == "input" {
+			case "input":
 				addonID := m.input.Value()
 				if addonID != "" {
 					m.loading = true

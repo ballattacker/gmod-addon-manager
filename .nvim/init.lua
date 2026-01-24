@@ -33,9 +33,9 @@ function os.exec(cmd, opts)
 	return s
 end
 
--- vim.keymap.set({ "n" }, "<leader>pr<enter>", function()
+-- vim.keymap.set({ "n" }, "<leader>pr", function()
 -- 	os.exec(string.format("odin run %s -out:%s/odin", vim.fn.getcwd(), outdir))
 -- end)
-vim.keymap.set({ "n" }, "<leader>pb<enter>", function()
+vim.keymap.set({ "n" }, "<leader>pb", function()
 	os.exec(string.format("./build.sh"))
 end)
