@@ -15,12 +15,29 @@ $out_dir = "$addon_dir\0\out"
 New-Item -ItemType Directory -Force -Path $tmp_dir
 New-Item -ItemType Directory -Force -Path $out_dir
 
-# Find the downloaded GMA file (there should be only one)
-$gma_file = Get-ChildItem -Path "$download_dir\$id" -Filter "*.gma" | Select-Object -First 1
-$gma_name = $gma_file.Name
+# Find the downloaded file (either .gma or _legacy.bin)
+$downloaded_file = Get-ChildItem -Path "$download_dir\$id" -File | Select-Object -First 1
+$file_path = "$download_dir\$id\$($downloaded_file.Name)"
+$file_name = $downloaded_file.Name
 
-# Move the downloaded GMA file to the temp directory
-Move-Item "$download_dir\$id\$gma_name" "$tmp_dir\$gma_name"
+# Handle .bin file (extract and rename to .gma)
+if ($file_name -like "*_legacy.bin") {
+    # Extract the .bin file (assuming it's a zip)
+    Expand-Archive -Path $file_path -DestinationPath "$tmp_dir\bin_extract" -Force
+    # Find the extracted .gma file
+    $extracted_gma = Get-ChildItem -Path "$tmp_dir\bin_extract" -Filter "*.gma" | Select-Object -First 1
+    $gma_name = $extracted_gma.Name
+    # Move the extracted .gma to tmp directory
+    Move-Item "$tmp_dir\bin_extract\$gma_name" "$tmp_dir\$gma_name"
+    # Clean up extraction directory
+    Remove-Item "$tmp_dir\bin_extract" -Recurse -Force
+} else {
+    # It's already a .gma file
+    $gma_name = $file_name
+    # Move the .gma file to tmp directory
+    Move-Item $file_path "$tmp_dir\$gma_name"
+}
+
 # Remove the original downloaded folder
 Remove-Item "$download_dir\$id" -Recurse -Force
 
