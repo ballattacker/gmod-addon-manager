@@ -19,9 +19,6 @@ var (
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-	tableHeaderStyle  = lipgloss.NewStyle().Bold(true).Padding(0, 1)
-	tableRowStyle     = lipgloss.NewStyle().Padding(0, 1)
-	selectedRowStyle  = lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("170"))
 )
 
 type itemDelegate struct{}
@@ -35,17 +32,13 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	status := "❌ Disabled"
-	if i.addon.Enabled {
-		status = "✅ Enabled"
-	}
+	str := fmt.Sprintf("%d. %s", index+1, i.Title())
 
-	str := fmt.Sprintf("%-10s | %-30s | %-20s | %s",
-		i.addon.ID, i.addon.Title, i.addon.Author, status)
-
-	fn := tableRowStyle.Render
+	fn := itemStyle.Render
 	if index == m.Index() {
-		fn = selectedRowStyle.Render
+		fn = func(s string) string {
+			return selectedItemStyle.Render("> " + s)
+		}
 	}
 
 	fmt.Fprintf(w, fn(str))
@@ -98,8 +91,18 @@ type addonItem struct {
 	addon addon.Addon
 }
 
-func (i addonItem) Title() string       { return i.addon.Title }
-func (i addonItem) Description() string { return fmt.Sprintf("ID: %s | Author: %s", i.addon.ID, i.addon.Author) }
+func (i addonItem) Title() string {
+	status := "❌ Disabled"
+	if i.addon.Enabled {
+		status = "✅ Enabled"
+	}
+	return fmt.Sprintf("%s - %s", i.addon.ID, i.addon.Title)
+}
+
+func (i addonItem) Description() string {
+	return fmt.Sprintf("Author: %s | Status: %s", i.addon.Author, i.addon.Description)
+}
+
 func (i addonItem) FilterValue() string { return i.addon.Title }
 
 func (m model) Init() tea.Cmd {
@@ -237,12 +240,7 @@ func (m model) View() string {
 		if len(m.list.Items()) == 0 {
 			return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
 		}
-
-		// Add table header
-		header := tableHeaderStyle.Render(fmt.Sprintf("%-10s | %-30s | %-20s | %s",
-			"ID", "Title", "Author", "Status")) + "\n"
-
-		return m.list.Title + "\n\n" + header + m.list.View() + "\n\n" +
+		return m.list.View() + "\n\n" +
 			"[i] Install new addon  [r] Refresh  [q] Quit\n"
 
 	case "input":
