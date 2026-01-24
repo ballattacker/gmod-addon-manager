@@ -49,6 +49,7 @@ func runCLI(manager *addon.Manager) {
 	rootCmd.AddCommand(initGetCmd(manager))
 	rootCmd.AddCommand(initEnableCmd(manager))
 	rootCmd.AddCommand(initDisableCmd(manager))
+	rootCmd.AddCommand(initRemoveCmd(manager))
 	rootCmd.AddCommand(initListCmd(manager))
 	rootCmd.AddCommand(initInfoCmd(manager))
 
@@ -102,6 +103,22 @@ func initDisableCmd(manager *addon.Manager) *cobra.Command {
 				os.Exit(1)
 			}
 			fmt.Printf("Addon %s disabled successfully\n", args[0])
+		},
+	}
+}
+
+func initRemoveCmd(manager *addon.Manager) *cobra.Command {
+	return &cobra.Command{
+		Use:   "remove [addon-id]",
+		Short: "Remove an addon (removes files and disables it)",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			err := manager.RemoveAddon(args[0])
+			if err != nil {
+				fmt.Printf("Error removing addon: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("Addon %s removed successfully\n", args[0])
 		},
 	}
 }

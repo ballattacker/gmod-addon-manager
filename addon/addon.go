@@ -178,6 +178,35 @@ func (m *Manager) DisableAddon(id string) error {
 	return nil
 }
 
+func (m *Manager) RemoveAddon(id string) error {
+	// Check if addon is installed
+	addonDir := filepath.Join(m.config.OutDir, id)
+	if _, err := os.Stat(addonDir); os.IsNotExist(err) {
+		return fmt.Errorf("addon %s is not installed", id)
+	}
+
+	// First disable the addon if it's enabled
+	addonSymlink := filepath.Join(m.config.AddonDir, id)
+	if _, err := os.Lstat(addonSymlink); err == nil {
+		if err := os.Remove(addonSymlink); err != nil {
+			return fmt.Errorf("failed to remove symlink: %w", err)
+		}
+	}
+
+	// Remove the addon directory
+	if err := os.RemoveAll(addonDir); err != nil {
+		return fmt.Errorf("failed to remove addon directory: %w", err)
+	}
+
+	// Clear the cache for this addon
+	if err := m.RefreshCache(id); err != nil {
+		return fmt.Errorf("failed to clear cache: %w", err)
+	}
+
+	fmt.Printf("Addon %s removed successfully.\n", id)
+	return nil
+}
+
 func (m *Manager) RefreshCache(id string) error {
 	// Clear the cache for this addon
 	cacheFile := m.cache.cacheFilePath(id)
