@@ -15,16 +15,20 @@ $out_dir = "$addon_dir\0\out"
 New-Item -ItemType Directory -Force -Path $tmp_dir
 New-Item -ItemType Directory -Force -Path $out_dir
 
+# Find the downloaded GMA file (there should be only one)
+$gma_file = Get-ChildItem -Path "$download_dir\$id" -Filter "*.gma" | Select-Object -First 1
+$gma_name = $gma_file.Name
+
 # Move the downloaded GMA file to the temp directory
-Move-Item "$download_dir\$id\*.gma" "$tmp_dir\$id.gma"
+Move-Item "$download_dir\$id\$gma_name" "$tmp_dir\$gma_name"
 # Remove the original downloaded folder
 Remove-Item "$download_dir\$id" -Recurse -Force
 
 # Execute GMAD tool
-& "$gmod_dir\bin\gmad.exe" "$tmp_dir\$id.gma"
+& "$gmod_dir\bin\gmad.exe" "$tmp_dir\$gma_name"
 
 # Remove the temporary GMA file
-Remove-Item "$tmp_dir\$id.gma"
+Remove-Item "$tmp_dir\$gma_name"
 
 # Move the extracted addon to the addons directory with new name
 Move-Item -Path "$tmp_dir\$id" -Destination "$out_dir\$id"
