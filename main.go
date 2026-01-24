@@ -47,6 +47,22 @@ func initDownloadCmd(manager *addon.Manager) *cobra.Command {
 	}
 }
 
+func formatAddonInfo(addon addon.Addon) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("ID: %s\n", addon.ID))
+	if addon.Title != "" {
+		sb.WriteString(fmt.Sprintf("Title: %s\n", addon.Title))
+	}
+	if addon.Author != "" {
+		sb.WriteString(fmt.Sprintf("Author: %s\n", addon.Author))
+	}
+	if len(addon.Tags) > 0 {
+		sb.WriteString(fmt.Sprintf("Tags: %s\n", strings.Join(addon.Tags, ", ")))
+	}
+	sb.WriteString(fmt.Sprintf("Enabled: %t\n", addon.Enabled))
+	return sb.String()
+}
+
 func initListCmd(manager *addon.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
@@ -66,17 +82,7 @@ func initListCmd(manager *addon.Manager) *cobra.Command {
 			fmt.Println("Installed Addons:")
 			fmt.Println("=================")
 			for _, addon := range addons {
-				fmt.Printf("ID: %s\n", addon.ID)
-				if addon.Title != "" {
-					fmt.Printf("Title: %s\n", addon.Title)
-				}
-				if addon.Author != "" {
-					fmt.Printf("Author: %s\n", addon.Author)
-				}
-				if len(addon.Tags) > 0 {
-					fmt.Printf("Tags: %s\n", strings.Join(addon.Tags, ", "))
-				}
-				fmt.Printf("Enabled: %t\n", addon.Enabled)
+				fmt.Print(formatAddonInfo(addon))
 				fmt.Println("------------------")
 			}
 		},
@@ -97,17 +103,7 @@ func initInfoCmd(manager *addon.Manager) *cobra.Command {
 
 			fmt.Println("Addon Information:")
 			fmt.Println("==================")
-			fmt.Printf("ID: %s\n", addonInfo.ID)
-			if addonInfo.Title != "" {
-				fmt.Printf("Title: %s\n", addonInfo.Title)
-			}
-			if addonInfo.Author != "" {
-				fmt.Printf("Author: %s\n", addonInfo.Author)
-			}
-			if len(addonInfo.Tags) > 0 {
-				fmt.Printf("Tags: %s\n", strings.Join(addonInfo.Tags, ", "))
-			}
-			fmt.Printf("Enabled: %t\n", addonInfo.Enabled)
+			fmt.Print(formatAddonInfo(*addonInfo))
 			fmt.Printf("Installed: %t\n", addonInfo.Installed)
 		},
 	}
