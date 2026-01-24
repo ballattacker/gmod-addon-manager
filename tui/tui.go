@@ -257,17 +257,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Handle Esc key for detail view
 		if msg.String() == "esc" {
-			if m.state == "detail" {
+			switch m.state {
+			case "detail":
 				m.state = "list"
 				m.selectedAddon = nil
 				return m, nil
-			} else if m.state == "input" {
+			case "input":
 				m.state = "list"
 				m.error = nil
 				return m, nil
 			}
 		}
-	}
 
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
