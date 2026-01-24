@@ -1,6 +1,7 @@
 # GMod Addon Manager
 
-A terminal-based application for downloading, installing, and managing Garry's Mod addons from the Steam Workshop.
+A terminal-based application for downloading, installing, and managing Garry's
+Mod addons from the Steam Workshop.
 
 ## Features
 
@@ -31,3 +32,44 @@ A terminal-based application for downloading, installing, and managing Garry's M
 
 Run the application without arguments to launch the interactive TUI:
 
+```shell
+gmod-addon-manager
+```
+
+### CLI Mode
+
+The application also supports command-line usage:
+
+```shell
+gmod-addon-manager [command]
+```
+
+Available commands:
+
+- `get [addon-id]` - Download and install an addon
+
+- `enable [addon-id]` - Enable an installed addon
+
+- `disable [addon-id]` - Disable an installed addon
+
+- `remove [addon-id]` - Remove an addon
+
+- `list` - List all installed addons
+
+- `info [addon-id]` - Show information about an addon
+
+- `config` - Show current configuration
+
+## Configuration
+
+On first run, the application will create a default configuration file at:
+
+- Windows: `%APPDATA%\gmod-addon-manager\gmod-addon-manager.json`
+
+- Linux/macOS: `~/.config/gmod-addon-manager/gmod-addon-manager.json`
+
+You can edit this file to customize paths and settings.
+
+## License
+
+[MIT License](LICENSE)
