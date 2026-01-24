@@ -173,10 +173,7 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
-		var title string
-
-		if i, ok := m.SelectedItem().(addonItem); ok {
-			title = i.Title()
+		if _, ok := m.SelectedItem().(addonItem); ok {
 		} else {
 			return nil
 		}
