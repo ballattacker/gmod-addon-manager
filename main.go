@@ -46,7 +46,7 @@ func initDownloadCmd(manager *addon.Manager) *cobra.Command {
 		},
 	}
 }
-// AI! also printt Enabled status
+
 func initListCmd(manager *addon.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
@@ -76,6 +76,7 @@ func initListCmd(manager *addon.Manager) *cobra.Command {
 				if len(addon.Tags) > 0 {
 					fmt.Printf("Tags: %s\n", strings.Join(addon.Tags, ", "))
 				}
+				fmt.Printf("Enabled: %t\n", addon.Enabled)
 				fmt.Println("------------------")
 			}
 		},
