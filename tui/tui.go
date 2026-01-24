@@ -43,7 +43,7 @@ func NewModel(manager *addon.Manager) model {
 	addonList := list.New(items, newItemDelegate(newDelegateKeyMap()), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.SetShowStatusBar(false)
-	addonList.SetShowHelp(false)
+	addonList.SetShowHelp(true)  // Changed from false to true
 	addonList.SetFilteringEnabled(false)
 	addonList.Styles.Title = titleStyle
 	addonList.Styles.PaginationStyle = paginationStyle
@@ -362,11 +362,7 @@ func (m model) View() string {
 		if len(m.list.Items()) == 0 {
 			return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
 		}
-		help := m.keys.ShortHelp()
-		return m.list.View() + "\n\n" +
-			help[0].Help().Key + " " + help[0].Help().Desc + "  " +
-			help[1].Help().Key + " " + help[1].Help().Desc + "  " +
-			help[2].Help().Key + " " + help[2].Help().Desc + "\n"
+		return m.list.View()
 
 	case "input":
 		return fmt.Sprintf(
