@@ -124,7 +124,7 @@ func (m *Manager) DownloadAddon(id string) error {
 	return nil
 }
 
-func (m *Manager) ListAddons() ([]Addon, error) {
+func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 	var addons []Addon
 
 	// Read the out directory to find installed addons
@@ -139,35 +139,17 @@ func (m *Manager) ListAddons() ([]Addon, error) {
 		}
 
 		addonID := entry.Name()
-		// Check if addon is enabled by checking if symlink exists in addons directory
-		addonSymlink := filepath.Join(m.config.AddonDir, addonID)
-		_, err := os.Lstat(addonSymlink)
-		isEnabled := !os.IsNotExist(err)
-
-		// Create base addon with local info
-		addon := Addon{
-			ID:        addonID,
-			Installed: true,
-			Enabled:   isEnabled,
-		}
-
-		// Try to get more info from Steam Workshop
-		workshopAddon, err := m.getWorkshopAddonInfo(addonID)
+		// Get addon info using the existing GetAddonInfo method
+		addonInfo, err := m.GetAddonInfo(addonID)
 		if err != nil {
-			// If we can't get info from Steam, just use what we have
-			addons = append(addons, addon)
+			// If we can't get info, skip this addon
 			continue
 		}
 
-		// Merge the workshop info with our addon
-		if workshopAddon != nil {
-			addon.Title = workshopAddon.Title
-			addon.Author = workshopAddon.Creator
-			addon.Description = workshopAddon.Description
-			addon.Tags = workshopAddon.GetTagsAsStrings()
+		// Only include installed addons in the list
+		if addonInfo.Installed {
+			addons = append(addons, *addonInfo)
 		}
-
-		addons = append(addons, addon)
 	}
 
 	return addons, nil
