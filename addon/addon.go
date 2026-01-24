@@ -163,7 +163,7 @@ func (m *Manager) ListAddons() ([]Addon, error) {
 			addon.Title = workshopAddon.Title
 			addon.Author = workshopAddon.Creator
 			addon.Description = workshopAddon.Description
-			addon.Tags = workshopAddon.Tags
+			addon.Tags = workshopAddon.GetTagsAsStrings()
 		}
 
 		addons = append(addons, addon)
@@ -198,7 +198,7 @@ func (m *Manager) GetAddonInfo(id string) (*Addon, error) {
 		Title:       workshopAddon.Title,
 		Author:      workshopAddon.Creator,
 		Description: workshopAddon.Description,
-		Tags:        workshopAddon.Tags,
+		Tags:        workshopAddon.GetTagsAsStrings(),
 		Installed:   true,
 		Enabled:     true,
 	}, nil
@@ -260,4 +260,13 @@ type WorkshopAddon struct {
 
 type Tag struct {
 	Tag string `json:"tag"`
+}
+
+// Method to convert []Tag to []string
+func (w *WorkshopAddon) GetTagsAsStrings() []string {
+	tags := make([]string, len(w.Tags))
+	for i, tag := range w.Tags {
+		tags[i] = tag.Tag
+	}
+	return tags
 }
