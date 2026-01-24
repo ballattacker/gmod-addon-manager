@@ -139,11 +139,15 @@ func (m *Manager) ListAddons() ([]Addon, error) {
 		}
 
 		addonID := entry.Name()
+		// Check if addon is enabled by checking if symlink exists in addons directory
+		addonSymlink := filepath.Join(m.config.AddonDir, addonID)
+		_, err := os.Lstat(addonSymlink)
+		isEnabled := !os.IsNotExist(err)
+
 		addon := Addon{
 			ID:        addonID,
 			Installed: true,
-			// AI!: read `addon.ps1` to understand when addon is enabled
-			Enabled:   true, // Assume enabled if it's in the out directory
+			Enabled:   isEnabled,
 		}
 
 		// Try to get more info from Steam Workshop
