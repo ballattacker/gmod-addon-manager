@@ -20,12 +20,12 @@ jobs:
 
     steps:
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.21'
+        go-version: '1.23'
 
     - name: Check out code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
     - name: Build
       env:
@@ -33,8 +33,13 @@ jobs:
         GOARCH: ${{ matrix.goarch }}
       run: go build -o ${{ matrix.output_name }}
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    # - name: Upload artifact
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ matrix.output_name }}
+    #     path: ${{ matrix.output_name }}
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: ${{ matrix.output_name }}
-        path: ${{ matrix.output_name }}
+        files: ${{ matrix.output_name }}
