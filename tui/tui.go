@@ -92,15 +92,15 @@ type addonItem struct {
 }
 
 func (i addonItem) Title() string {
-	status := "❌ Disabled"
-	if i.addon.Enabled {
-		status = "✅ Enabled"
-	}
 	return fmt.Sprintf("%s - %s", i.addon.ID, i.addon.Title)
 }
 
 func (i addonItem) Description() string {
-	return fmt.Sprintf("Author: %s | Status: %s", i.addon.Author, i.addon.Description)
+	status := "❌ Disabled"
+	if i.addon.Enabled {
+		status = "✅ Enabled"
+	}
+	return fmt.Sprintf("Author: %s | Status: %s", i.addon.Author, status)
 }
 
 func (i addonItem) FilterValue() string { return i.addon.Title }
