@@ -13,7 +13,11 @@ import (
 
 func main() {
 	cfg := config.NewDefaultConfig()
-	addonManager := addon.NewManager(cfg)
+	addonManager, err := addon.NewManager(cfg)
+	if err != nil {
+		fmt.Printf("Failed to initialize addon manager: %v\n", err)
+		os.Exit(1)
+	}
 
 	var rootCmd = &cobra.Command{
 		Use:   "gmod-addon-manager",

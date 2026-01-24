@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gmod-addon-manager/config"
 )
@@ -25,12 +26,20 @@ type Addon struct {
 
 type Manager struct {
 	config *config.Config
+	cache  *PersistentCache
 }
 
-func NewManager(cfg *config.Config) *Manager {
+func NewManager(cfg *config.Config) (*Manager, error) {
+	// Initialize persistent cache with 24-hour TTL
+	cache, err := NewPersistentCache(24 * time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache: %w", err)
+	}
+
 	return &Manager{
 		config: cfg,
-	}
+		cache:  cache,
+	}, nil
 }
 
 func (m *Manager) DownloadAddon(id string) error {
@@ -205,8 +214,15 @@ func (m *Manager) GetAddonInfo(id string) (*Addon, error) {
 	return addon, nil
 }
 
-// Helper function to get addon info from Steam Workshop
+// Helper function to get addon info from Steam Workshop with caching
 func (m *Manager) getWorkshopAddonInfo(id string) (*WorkshopAddon, error) {
+	// Check cache first
+	if cachedAddon, found, err := m.cache.Get(id); err != nil {
+		return nil, fmt.Errorf("cache error: %w", err)
+	} else if found {
+		return cachedAddon, nil
+	}
+
 	apiURL := "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 
 	var requestBody string
@@ -236,7 +252,14 @@ func (m *Manager) getWorkshopAddonInfo(id string) (*WorkshopAddon, error) {
 		return nil, nil
 	}
 
-	return &result.Response.PublishedFileDetails[0], nil
+	workshopAddon := &result.Response.PublishedFileDetails[0]
+
+	// Cache the result
+	if err := m.cache.Set(id, workshopAddon); err != nil {
+		return nil, fmt.Errorf("failed to cache workshop addon: %w", err)
+	}
+
+	return workshopAddon, nil
 }
 
 // Steam Workshop API response structures
