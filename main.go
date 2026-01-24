@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gmod-addon-manager/addon"
 	"gmod-addon-manager/config"
