@@ -142,6 +142,7 @@ func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 		// Get addon info using the existing GetAddonInfo method
 		addonInfo, err := m.GetAddonInfo(addonID)
 		if err != nil {
+			// AI! display the addon with empty or default fields
 			// If we can't get info, skip this addon
 			continue
 		}
