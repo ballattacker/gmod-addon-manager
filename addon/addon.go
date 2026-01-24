@@ -43,12 +43,6 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 }
 
 func (m *Manager) DownloadAddon(id string) error {
-	// Create temp directory for this addon
-	addonTempDir := filepath.Join(m.config.TempDir, id)
-	if err := os.MkdirAll(addonTempDir, 0755); err != nil {
-		return fmt.Errorf("failed to create temp directory: %w", err)
-	}
-
 	// Run steamcmd to download the addon
 	steamCmd := exec.Command(
 		m.config.SteamCmdPath,
@@ -74,56 +68,53 @@ func (m *Manager) DownloadAddon(id string) error {
 
 	// Get the first file (should be either .gma or _legacy.bin)
 	downloadedFile := files[0]
-	srcPath := filepath.Join(downloadDir, downloadedFile.Name())
-	dstPath := filepath.Join(addonTempDir, id+".gma")
+	filePath := filepath.Join(downloadDir, downloadedFile.Name())
+	fileName := downloadedFile.Name
 
-	// Handle .bin file (extract and rename to .gma)
-	if strings.HasSuffix(downloadedFile.Name(), "_legacy.bin") {
-		// For now, we'll just rename it to .gma
-		// In a real implementation, we might need to extract it
-		dstPath = filepath.Join(addonTempDir, id+".gma")
-		if err := os.Rename(srcPath, dstPath); err != nil {
-			return fmt.Errorf("failed to rename .bin file: %w", err)
-		}
-	} else if strings.HasSuffix(downloadedFile.Name(), ".gma") {
-		// Move the .gma file to temp directory
-		if err := os.Rename(srcPath, dstPath); err != nil {
-			return fmt.Errorf("failed to move .gma file: %w", err)
-		}
-	} else {
-		return fmt.Errorf("unknown file type: %s", downloadedFile.Name())
+	// Create output directory
+	outDir := filepath.Join(m.config.OutDir, id)
+	if err := os.MkdirAll(outDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// AI! the tmp dir is no longer necessary. `--out` to 0/out/$id directly. for bin file operate in the download directory directly, no need for tmp dir
-	// Execute GMAD tool to extract the addon
+	var gmaPath string
+
+	// Handle .bin file (extract and rename to .gma)
+	if strings.HasSuffix(fileName, "_legacy.bin") {
+		// Extract directly in the download directory
+		gmaPath = filepath.Join(downloadDir, id+".gma")
+
+		// For .bin files, we'll treat them as .gma files directly
+		// In a real implementation, you might need proper extraction
+		if err := os.Rename(filePath, gmaPath); err != nil {
+			return fmt.Errorf("failed to rename .bin file: %w", err)
+		}
+	} else if strings.HasSuffix(fileName, ".gma") {
+		// Move the .gma file to download directory with consistent name
+		gmaPath = filepath.Join(downloadDir, id+".gma")
+		if err := os.Rename(filePath, gmaPath); err != nil {
+			return fmt.Errorf("failed to rename .gma file: %w", err)
+		}
+	} else {
+		return fmt.Errorf("unknown file type: %s", fileName)
+	}
+
+	// Execute GMAD tool to extract directly to output directory
 	gmadCmd := exec.Command(
 		m.config.GMADPath,
 		"extract",
-		"-file", dstPath,
-		"-out", addonTempDir,
+		"-file", gmaPath,
+		"-out", outDir,
 	)
 
 	if err := gmadCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run gmad: %w", err)
 	}
 
-	// Move the extracted addon to the out directory
-	extractedDir := filepath.Join(addonTempDir, id)
-	outDir := filepath.Join(m.config.OutDir, id)
-
-	if err := os.Rename(extractedDir, outDir); err != nil {
-		return fmt.Errorf("failed to move extracted addon: %w", err)
-	}
-
 	// Create symlink to enable the addon
 	addonDir := filepath.Join(m.config.AddonDir, id)
 	if err := os.Symlink(outDir, addonDir); err != nil {
 		return fmt.Errorf("failed to create symlink: %w", err)
-	}
-
-	// Clean up temp directory
-	if err := os.RemoveAll(addonTempDir); err != nil {
-		return fmt.Errorf("failed to clean up temp directory: %w", err)
 	}
 
 	// Clean up download directory
