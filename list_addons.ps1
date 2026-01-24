@@ -45,7 +45,7 @@ foreach ($folder in $addon_folders) {
             $params.key = $steam_api_key
         }
 
-        $response = Invoke-RestMethod -Uri ($api_url + "?" + ($params | ConvertTo-Json -Compress)) -Method Get
+        $response = Invoke-RestMethod -Uri $api_url -Method Post -Body $params
 
         if ($response.response.publishedfiledetails -and $response.response.publishedfiledetails.Count -gt 0) {
             $details = $response.response.publishedfiledetails[0]
@@ -53,8 +53,8 @@ foreach ($folder in $addon_folders) {
             Write-Host "ID: $addon_id"
             Write-Host "Title: $($details.title)"
             Write-Host "Creator: $($details.creator)"
-            Write-Host "Time Created: $($details.time_created)"
-            Write-Host "Time Updated: $($details.time_updated)"
+            Write-Host "Time Created: $([datetime]::FromUnixTimeSeconds($details.time_created).ToString('yyyy-MM-dd HH:mm:ss'))"
+            Write-Host "Time Updated: $([datetime]::FromUnixTimeSeconds($details.time_updated).ToString('yyyy-MM-dd HH:mm:ss'))"
             Write-Host "Views: $($details.views)"
             Write-Host "Subscriptions: $($details.subscriptions)"
             Write-Host "Favorites: $($details.favorited)"
