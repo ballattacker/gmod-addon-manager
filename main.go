@@ -14,7 +14,13 @@ import (
 )
 
 func main() {
-	cfg := config.NewDefaultConfig()
+	// Load config
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		fmt.Printf("Failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
 	addonManager, err := addon.NewManager(cfg)
 	if err != nil {
 		fmt.Printf("Failed to initialize addon manager: %v\n", err)
@@ -30,7 +36,7 @@ func main() {
 	}
 
 	// Otherwise run in CLI mode (verbose output is already enabled by default)
-	runCLI(addonManager)
+	runCLI(addonManager, cfg)
 }
 
 func runTUI(manager *addon.Manager) {
@@ -41,7 +47,7 @@ func runTUI(manager *addon.Manager) {
 	}
 }
 
-func runCLI(manager *addon.Manager) {
+func runCLI(manager *addon.Manager, cfg *config.Config) {
 	var rootCmd = &cobra.Command{
 		Use:   "gmod-addon-manager",
 		Short: "A TUI for managing Garry's Mod addons",
@@ -54,6 +60,7 @@ func runCLI(manager *addon.Manager) {
 	rootCmd.AddCommand(initRemoveCmd(manager))
 	rootCmd.AddCommand(initListCmd(manager))
 	rootCmd.AddCommand(initInfoCmd(manager))
+	rootCmd.AddCommand(initConfigCmd(cfg))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -183,6 +190,25 @@ func initInfoCmd(manager *addon.Manager) *cobra.Command {
 			fmt.Println("==================")
 			fmt.Print(formatAddonInfo(*addonInfo))
 			fmt.Printf("Installed: %t\n", addonInfo.Installed)
+		},
+	}
+}
+
+func initConfigCmd(cfg *config.Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "config",
+		Short: "Manage configuration",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Show current config
+			fmt.Println("Current Configuration:")
+			fmt.Println("======================")
+			fmt.Printf("GMod Directory: %s\n", cfg.GModDir)
+			fmt.Printf("Download Directory: %s\n", cfg.DownloadDir)
+			fmt.Printf("Addon Directory: %s\n", cfg.AddonDir)
+			fmt.Printf("Output Directory: %s\n", cfg.OutDir)
+			fmt.Printf("SteamCMD Path: %s\n", cfg.SteamCmdPath)
+			fmt.Printf("GMAD Path: %s\n", cfg.GMADPath)
+			fmt.Printf("Steam API Key: %s\n", cfg.SteamAPIKey)
 		},
 	}
 }
