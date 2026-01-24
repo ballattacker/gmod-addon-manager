@@ -43,7 +43,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 }
 
 func (m *Manager) DownloadAddon(id string) error {
-	// Run steamcmd to download the addon
+	// Run steamcmd to download the addon with output
 	steamCmd := exec.Command(
 		m.config.SteamCmdPath,
 		"+login", "anonymous",
@@ -51,9 +51,15 @@ func (m *Manager) DownloadAddon(id string) error {
 		"+quit",
 	)
 
+	// Set up output pipes to capture and display SteamCMD output
+	steamCmd.Stdout = os.Stdout
+	steamCmd.Stderr = os.Stderr
+
+	fmt.Printf("Downloading addon %s...\n", id)
 	if err := steamCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run steamcmd: %w", err)
 	}
+	fmt.Println("Download completed.")
 
 	// Find the downloaded file
 	downloadDir := filepath.Join(m.config.DownloadDir, id)
@@ -107,9 +113,11 @@ func (m *Manager) DownloadAddon(id string) error {
 		"-out", outDir,
 	)
 
+	fmt.Printf("Extracting addon %s...\n", id)
 	if err := gmadCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run gmad: %w", err)
 	}
+	fmt.Println("Extraction completed.")
 
 	// Create symlink to enable the addon
 	addonDir := filepath.Join(m.config.AddonDir, id)
@@ -122,6 +130,7 @@ func (m *Manager) DownloadAddon(id string) error {
 		return fmt.Errorf("failed to clean up download directory: %w", err)
 	}
 
+	fmt.Printf("Addon %s installed and enabled successfully.\n", id)
 	return nil
 }
 
