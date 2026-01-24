@@ -1,60 +1,75 @@
 <#
 .SYNOPSIS
-    Lists all installed Garry's Mod addons with their names and information.
+    Lists all installed Garry's Mod addons with their names and information from Steam Workshop.
 .DESCRIPTION
-    This script scans the Garry's Mod addons directory and displays information
-    about each installed addon by reading their addon.json files.
+    This script scans the addons/0/out directory and fetches information for each addon
+    using the Steam Workshop API.
 #>
 
 $gmod_dir = "C:\Local\Garrys Mod\"
-$addon_dir = "$gmod_dir\garrysmod\addons"
+$out_dir = "$gmod_dir\garrysmod\addons\0\out"
 
-# Check if addons directory exists
-if (-not (Test-Path $addon_dir)) {
-    Write-Error "Addons directory not found at $addon_dir"
+# Steam Workshop API key (replace with your own or leave empty for limited access)
+$steam_api_key = ""
+
+# Check if out directory exists
+if (-not (Test-Path $out_dir)) {
+    Write-Error "Out directory not found at $out_dir"
     exit 1
 }
 
-# Get all addon directories (excluding symlinks and special directories)
-$addon_folders = Get-ChildItem -Path $addon_dir -Directory |
-                 Where-Object { $_.Name -notmatch '^0$' } |
-                 Where-Object { -not $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint) }
+# Get all addon directories in out folder
+$addon_folders = Get-ChildItem -Path $out_dir -Directory
 
 if ($addon_folders.Count -eq 0) {
-    Write-Host "No addons found in $addon_dir"
+    Write-Host "No addons found in $out_dir"
     exit
 }
 
-Write-Host "Installed Addons:"
-Write-Host "================"
+Write-Host "Installed Addons (from Steam Workshop):"
+Write-Host "======================================"
 Write-Host ""
 
 foreach ($folder in $addon_folders) {
-    $addon_path = Join-Path -Path $addon_dir -ChildPath $folder.Name
-    $addon_json = Join-Path -Path $addon_path -ChildPath "addon.json"
+    $addon_id = $folder.Name
 
-    # Try to read addon.json
-    if (Test-Path $addon_json) {
-        try {
-            $addon_data = Get-Content -Path $addon_json -Raw | ConvertFrom-Json
-
-            Write-Host "ID: $($folder.Name)"
-            Write-Host "Title: $($addon_data.title)"
-            Write-Host "Author: $($addon_data.author)"
-            Write-Host "Version: $($addon_data.version)"
-            Write-Host "Description: $($addon_data.description)"
-            Write-Host "Tags: $($addon_data.tags -join ', ')"
-            Write-Host ""
+    # Try to fetch addon info from Steam Workshop API
+    try {
+        $api_url = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+        $params = @{
+            itemcount = 1
+            publishedfileids = @($addon_id)
         }
-        catch {
-            Write-Host "ID: $($folder.Name)"
-            Write-Host "Error reading addon.json: $_"
+
+        if (-not [string]::IsNullOrEmpty($steam_api_key)) {
+            $params.key = $steam_api_key
+        }
+
+        $response = Invoke-RestMethod -Uri ($api_url + "?" + ($params | ConvertTo-Json -Compress)) -Method Get
+
+        if ($response.response.publishedfiledetails -and $response.response.publishedfiledetails.Count -gt 0) {
+            $details = $response.response.publishedfiledetails[0]
+
+            Write-Host "ID: $addon_id"
+            Write-Host "Title: $($details.title)"
+            Write-Host "Creator: $($details.creator)"
+            Write-Host "Time Created: $($details.time_created)"
+            Write-Host "Time Updated: $($details.time_updated)"
+            Write-Host "Views: $($details.views)"
+            Write-Host "Subscriptions: $($details.subscriptions)"
+            Write-Host "Favorites: $($details.favorited)"
+            Write-Host "Tags: $($details.tags -join ', ')"
+            Write-Host "Description: $($details.description)"
+            Write-Host ""
+        } else {
+            Write-Host "ID: $addon_id"
+            Write-Host "No information available from Steam Workshop"
             Write-Host ""
         }
     }
-    else {
-        Write-Host "ID: $($folder.Name)"
-        Write-Host "No addon.json found"
+    catch {
+        Write-Host "ID: $addon_id"
+        Write-Host "Error fetching information: $_"
         Write-Host ""
     }
 }
