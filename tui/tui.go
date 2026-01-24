@@ -255,6 +255,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+		// Handle Esc key for detail view
+		if msg.String() == "esc" {
+			if m.state == "detail" {
+				m.state = "list"
+				m.selectedAddon = nil
+				return m, nil
+			} else if m.state == "input" {
+				m.state = "list"
+				m.error = nil
+				return m, nil
+			}
+		}
+	}
+
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
 
@@ -325,9 +339,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
 					}
 				}
-			} else if msg.String() == "esc" {
-				m.state = "list"
-				m.error = nil
 			}
 		}
 	} else {
