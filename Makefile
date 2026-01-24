@@ -6,7 +6,6 @@ BIN_NAME := gmod-addon-manager
 # Default target (shows help)
 all:
 	@echo "Usage: make [linux|windows|release]"
-	@echo "Example: make release TAG=v1.0.0"
 
 # Build for Windows
 windows:
