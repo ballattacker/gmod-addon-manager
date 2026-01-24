@@ -95,8 +95,8 @@ func initInfoCmd(manager *addon.Manager) *cobra.Command {
 				os.Exit(1)
 			}
 
-			fmt.Printf("Addon Information:\n")
-			fmt.Printf("==================\n")
+			fmt.Println("Addon Information:")
+			fmt.Println("==================")
 			fmt.Printf("ID: %s\n", addonInfo.ID)
 			if addonInfo.Title != "" {
 				fmt.Printf("Title: %s\n", addonInfo.Title)
@@ -104,14 +104,11 @@ func initInfoCmd(manager *addon.Manager) *cobra.Command {
 			if addonInfo.Author != "" {
 				fmt.Printf("Author: %s\n", addonInfo.Author)
 			}
-			if addonInfo.Description != "" {
-				fmt.Printf("Description: %s\n", addonInfo.Description)
-			}
 			if len(addonInfo.Tags) > 0 {
 				fmt.Printf("Tags: %s\n", strings.Join(addonInfo.Tags, ", "))
 			}
-			fmt.Printf("Installed: %t\n", addonInfo.Installed)
 			fmt.Printf("Enabled: %t\n", addonInfo.Enabled)
+			fmt.Printf("Installed: %t\n", addonInfo.Installed)
 		},
 	}
 }
