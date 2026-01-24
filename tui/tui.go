@@ -9,12 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-)
-
-var (
-	titleStyle      = lipgloss.NewStyle().MarginLeft(2)
-	paginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	_ "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -42,11 +37,6 @@ func NewModel(manager *addon.Manager) model {
 	// Create the list with custom delegate
 	addonList := list.New(items, newItemDelegate(newDelegateKeyMap()), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
-	addonList.SetShowStatusBar(false)
-	addonList.SetShowHelp(true)  // Changed from false to true
-	addonList.SetFilteringEnabled(false)
-	addonList.Styles.Title = titleStyle
-	addonList.Styles.PaginationStyle = paginationStyle
 
 	// Initialize text input
 	input := textinput.New()
