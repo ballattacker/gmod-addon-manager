@@ -206,6 +206,7 @@ func (m *Manager) GetAddonInfo(id string) (*Addon, error) {
 
 // Helper function to get addon info from Steam Workshop
 func (m *Manager) getWorkshopAddonInfo(id string) (*WorkshopAddon, error) {
+	// AI!: key is optional
 	if m.config.SteamAPIKey == "" {
 		return nil, fmt.Errorf("no Steam API key configured")
 	}
