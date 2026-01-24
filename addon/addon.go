@@ -142,6 +142,7 @@ func (m *Manager) ListAddons() ([]Addon, error) {
 		addon := Addon{
 			ID:        addonID,
 			Installed: true,
+			// AI!: read `addon.ps1` to understand when addon is enabled
 			Enabled:   true, // Assume enabled if it's in the out directory
 		}
 
