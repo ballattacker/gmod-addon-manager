@@ -134,3 +134,9 @@ func getConfigPath() (string, error) {
 	appConfigDir := filepath.Join(configDir, "gmod-addon-manager")
 	return filepath.Join(appConfigDir, ConfigFileName), nil
 }
+
+// GetConfigPath returns the path to the config file
+// This is a public version of getConfigPath for external use
+func GetConfigPath() (string, error) {
+	return getConfigPath()
+}
