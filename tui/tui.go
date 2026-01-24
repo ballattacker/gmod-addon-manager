@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"gmod-addon-manager/addon"
 
@@ -19,6 +20,9 @@ var (
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	tableHeaderStyle  = lipgloss.NewStyle().Bold(true).Padding(0, 1)
+	tableRowStyle     = lipgloss.NewStyle().Padding(0, 1)
+	selectedRowStyle  = lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("170"))
 )
 
 type itemDelegate struct{}
@@ -32,13 +36,17 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%d. %s", index+1, i.addon.Title)
+	status := "❌ Disabled"
+	if i.addon.Enabled {
+		status = "✅ Enabled"
+	}
 
-	fn := itemStyle.Render
+	str := fmt.Sprintf("%-10s | %-30s | %-20s | %s",
+		i.addon.ID, i.addon.Title, i.addon.Author, status)
+
+	fn := tableRowStyle.Render
 	if index == m.Index() {
-		fn = func(s string) string {
-			return selectedItemStyle.Render("> " + s)
-		}
+		fn = selectedRowStyle.Render
 	}
 
 	fmt.Fprintf(w, fn(str))
@@ -230,7 +238,12 @@ func (m model) View() string {
 		if len(m.list.Items()) == 0 {
 			return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
 		}
-		return m.list.View() + "\n\n" +
+
+		// Add table header
+		header := tableHeaderStyle.Render(fmt.Sprintf("%-10s | %-30s | %-20s | %s",
+			"ID", "Title", "Author", "Status")) + "\n"
+
+		return m.list.Title + "\n\n" + header + m.list.View() + "\n\n" +
 			"[i] Install new addon  [r] Refresh  [q] Quit\n"
 
 	case "input":
@@ -245,9 +258,9 @@ func (m model) View() string {
 		}
 
 		a := m.selectedAddon
-		status := "Disabled"
+		status := "❌ Disabled"
 		if a.Enabled {
-			status = "Enabled"
+			status = "✅ Enabled"
 		}
 
 		return fmt.Sprintf(
