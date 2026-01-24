@@ -206,13 +206,14 @@ func (m *Manager) GetAddonInfo(id string) (*Addon, error) {
 
 // Helper function to get addon info from Steam Workshop
 func (m *Manager) getWorkshopAddonInfo(id string) (*WorkshopAddon, error) {
-	// AI!: key is optional
-	if m.config.SteamAPIKey == "" {
-		return nil, fmt.Errorf("no Steam API key configured")
-	}
-
 	apiURL := "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-	requestBody := fmt.Sprintf("itemcount=1&publishedfileids[0]=%s&key=%s", id, m.config.SteamAPIKey)
+
+	var requestBody string
+	if m.config.SteamAPIKey != "" {
+		requestBody = fmt.Sprintf("itemcount=1&publishedfileids[0]=%s&key=%s", id, m.config.SteamAPIKey)
+	} else {
+		requestBody = fmt.Sprintf("itemcount=1&publishedfileids[0]=%s", id)
+	}
 
 	resp, err := http.Post(apiURL, "application/x-www-form-urlencoded", strings.NewReader(requestBody))
 	if err != nil {
