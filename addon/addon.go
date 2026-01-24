@@ -94,6 +94,7 @@ func (m *Manager) DownloadAddon(id string) error {
 		return fmt.Errorf("unknown file type: %s", downloadedFile.Name())
 	}
 
+	// AI! the tmp dir is no longer necessary. `--out` to 0/out/$id directly. for bin file operate in the download directory directly, no need for tmp dir
 	// Execute GMAD tool to extract the addon
 	gmadCmd := exec.Command(
 		m.config.GMADPath,
