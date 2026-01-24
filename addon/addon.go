@@ -69,7 +69,7 @@ func (m *Manager) DownloadAddon(id string) error {
 	// Get the first file (should be either .gma or _legacy.bin)
 	downloadedFile := files[0]
 	filePath := filepath.Join(downloadDir, downloadedFile.Name())
-	fileName := downloadedFile.Name
+	fileName := downloadedFile.Name()
 
 	// Create output directory
 	outDir := filepath.Join(m.config.OutDir, id)
