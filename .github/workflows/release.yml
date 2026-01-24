@@ -1,0 +1,40 @@
+name: Release Build
+
+on:
+  push:
+    branches: [ release ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        goos: [linux, windows]
+        goarch: [amd64]
+        include:
+          - goos: linux
+            output_name: gmod-addon-manager-linux
+          - goos: windows
+            output_name: gmod-addon-manager-windows.exe
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: go build -o ${{ matrix.output_name }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.output_name }}
+        path: ${{ matrix.output_name }}
