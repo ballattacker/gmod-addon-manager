@@ -254,7 +254,10 @@ type WorkshopAddon struct {
 	Views           int      `json:"views"`
 	Subscriptions   int      `json:"subscriptions"`
 	Favorited       int      `json:"favorited"`
-	// AI! example tags response: `"tags":[{"tag":"Addon"},{"tag":"Fun"},{"tag":"Realism"},{"tag":"Gamemode"}]`
-	Tags            []string `json:"tags"`
+	Tags            []Tag    `json:"tags"`
 	Description     string   `json:"description"`
+}
+
+type Tag struct {
+	Tag string `json:"tag"`
 }
