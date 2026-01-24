@@ -5,6 +5,7 @@ import (
 
 	"gmod-addon-manager/addon"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,6 +25,8 @@ type model struct {
 	state         string
 	error         error
 	loading       bool
+	keys          *listKeyMap
+	delegateKeys  *delegateKeyMap
 }
 
 func NewModel(manager *addon.Manager) model {
@@ -37,13 +40,13 @@ func NewModel(manager *addon.Manager) model {
 	}
 
 	// Create the list with custom delegate
-	addonList := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	addonList := list.New(items, newItemDelegate(newDelegateKeyMap()), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
-	// addonList.SetShowStatusBar(false)
-	// addonList.SetShowHelp(false)
-	// addonList.SetFilteringEnabled(false)
-	// addonList.Styles.Title = titleStyle
-	// addonList.Styles.PaginationStyle = paginationStyle
+	addonList.SetShowStatusBar(false)
+	addonList.SetShowHelp(false)
+	addonList.SetFilteringEnabled(false)
+	addonList.Styles.Title = titleStyle
+	addonList.Styles.PaginationStyle = paginationStyle
 
 	// Initialize text input
 	input := textinput.New()
@@ -51,11 +54,13 @@ func NewModel(manager *addon.Manager) model {
 	input.Focus()
 
 	return model{
-		list:    addonList,
-		manager: manager,
-		input:   input,
-		state:   "list",
-		loading: false,
+		list:          addonList,
+		manager:       manager,
+		input:         input,
+		state:         "list",
+		loading:       false,
+		keys:          newListKeyMap(),
+		delegateKeys:  newDelegateKeyMap(),
 	}
 }
 
@@ -77,76 +82,177 @@ func (i addonItem) Description() string {
 
 func (i addonItem) FilterValue() string { return i.addon.Title }
 
+type listKeyMap struct {
+	toggleSpinner    key.Binding
+	toggleTitleBar   key.Binding
+	toggleStatusBar  key.Binding
+	togglePagination key.Binding
+	toggleHelpMenu   key.Binding
+	installItem      key.Binding
+	refreshList      key.Binding
+	quit             key.Binding
+}
+
+func newListKeyMap() *listKeyMap {
+	return &listKeyMap{
+		installItem: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "install"),
+		),
+		refreshList: key.NewBinding(
+			key.WithKeys("r"),
+			key.WithHelp("r", "refresh"),
+		),
+		quit: key.NewBinding(
+			key.WithKeys("q", "ctrl+c"),
+			key.WithHelp("q", "quit"),
+		),
+	}
+}
+
+func (k *listKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		k.installItem,
+		k.refreshList,
+		k.quit,
+	}
+}
+
+func (k *listKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{
+			k.installItem,
+			k.refreshList,
+			k.quit,
+		},
+	}
+}
+
+type delegateKeyMap struct {
+	choose key.Binding
+	enable key.Binding
+	disable key.Binding
+}
+
+func newDelegateKeyMap() *delegateKeyMap {
+	return &delegateKeyMap{
+		choose: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "view"),
+		),
+		enable: key.NewBinding(
+			key.WithKeys("e"),
+			key.WithHelp("e", "enable"),
+		),
+		disable: key.NewBinding(
+			key.WithKeys("d"),
+			key.WithHelp("d", "disable"),
+		),
+	}
+}
+
+func (d delegateKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		d.choose,
+		d.enable,
+		d.disable,
+	}
+}
+
+func (d delegateKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{
+			d.choose,
+			d.enable,
+			d.disable,
+		},
+	}
+}
+
+func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
+	d := list.NewDefaultDelegate()
+
+	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
+		var title string
+
+		if i, ok := m.SelectedItem().(addonItem); ok {
+			title = i.Title()
+		} else {
+			return nil
+		}
+
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch {
+			case key.Matches(msg, keys.choose):
+				if len(m.Items()) > 0 {
+					selected := m.SelectedItem().(addonItem)
+					return func() tea.Msg {
+						return selectAddonMsg{addon: &selected.addon}
+					}
+				}
+			case key.Matches(msg, keys.enable):
+				if len(m.Items()) > 0 {
+					selected := m.SelectedItem().(addonItem)
+					return func() tea.Msg {
+						return enableAddonMsg{id: selected.addon.ID}
+					}
+				}
+			case key.Matches(msg, keys.disable):
+				if len(m.Items()) > 0 {
+					selected := m.SelectedItem().(addonItem)
+					return func() tea.Msg {
+						return disableAddonMsg{id: selected.addon.ID}
+					}
+				}
+			}
+		}
+
+		return nil
+	}
+
+	d.ShortHelpFunc = func() []key.Binding {
+		return []key.Binding{
+			keys.choose,
+			keys.enable,
+			keys.disable,
+		}
+	}
+
+	d.FullHelpFunc = func() [][]key.Binding {
+		return [][]key.Binding{
+			{
+				keys.choose,
+				keys.enable,
+				keys.disable,
+			},
+		}
+	}
+
+	return d
+}
+
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c":
+		switch {
+		case key.Matches(msg, m.keys.quit):
 			return m, tea.Quit
 
-		case "enter":
-			switch m.state {
-			case "list":
-				if len(m.list.Items()) > 0 {
-					selected := m.list.SelectedItem().(addonItem)
-					m.selectedAddon = &selected.addon
-					m.state = "detail"
-				}
-			case "input":
-				addonID := m.input.Value()
-				if addonID != "" {
-					m.loading = true
-					return m, func() tea.Msg {
-						err := m.manager.GetAddon(addonID)
-						if err != nil {
-							return errorMsg{err}
-						}
-						return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
-					}
-				}
-			}
-
-		case "esc":
-			if m.state != "list" {
-				m.state = "list"
-				m.error = nil
-			}
-
-		case "e":
-			if m.state == "detail" && m.selectedAddon != nil {
-				m.loading = true
-				return m, func() tea.Msg {
-					err := m.manager.EnableAddon(m.selectedAddon.ID)
-					if err != nil {
-						return errorMsg{err}
-					}
-					return successMsg{fmt.Sprintf("Addon %s enabled", m.selectedAddon.ID)}
-				}
-			}
-
-		case "d":
-			if m.state == "detail" && m.selectedAddon != nil {
-				m.loading = true
-				return m, func() tea.Msg {
-					err := m.manager.DisableAddon(m.selectedAddon.ID)
-					if err != nil {
-						return errorMsg{err}
-					}
-					return successMsg{fmt.Sprintf("Addon %s disabled", m.selectedAddon.ID)}
-				}
-			}
-
-		case "i":
+		case key.Matches(msg, m.keys.installItem):
 			if m.state == "list" {
 				m.state = "input"
 				m.input.Reset()
 			}
 
-		case "r":
+		case key.Matches(msg, m.keys.refreshList):
 			if m.state == "list" {
 				m.loading = true
 				return m, func() tea.Msg {
@@ -161,6 +267,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
+
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
 
@@ -188,17 +295,60 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetItems(msg.items)
 		m.loading = false
 		return m, nil
+
+	case selectAddonMsg:
+		m.selectedAddon = msg.addon
+		m.state = "detail"
+		return m, nil
+
+	case enableAddonMsg:
+		m.loading = true
+		return m, func() tea.Msg {
+			err := m.manager.EnableAddon(msg.id)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s enabled", msg.id)}
+		}
+
+	case disableAddonMsg:
+		m.loading = true
+		return m, func() tea.Msg {
+			err := m.manager.DisableAddon(msg.id)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s disabled", msg.id)}
+		}
 	}
 
 	// Handle input updates
-	var cmd tea.Cmd
 	if m.state == "input" {
 		m.input, cmd = m.input.Update(msg)
+		if msg, ok := msg.(tea.KeyMsg); ok {
+			if msg.String() == "enter" {
+				addonID := m.input.Value()
+				if addonID != "" {
+					m.loading = true
+					return m, func() tea.Msg {
+						err := m.manager.GetAddon(addonID)
+						if err != nil {
+							return errorMsg{err}
+						}
+						return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
+					}
+				}
+			} else if msg.String() == "esc" {
+				m.state = "list"
+				m.error = nil
+			}
+		}
 	} else {
 		m.list, cmd = m.list.Update(msg)
 	}
 
-	return m, cmd
+	cmds = append(cmds, cmd)
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {
@@ -215,9 +365,11 @@ func (m model) View() string {
 		if len(m.list.Items()) == 0 {
 			return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
 		}
-		return m.list.View()
-		// return m.list.View() + "\n\n" +
-		// 	"[i] Install new addon  [r] Refresh  [q] Quit\n"
+		help := m.keys.ShortHelp()
+		return m.list.View() + "\n\n" +
+			help[0].Help().Key + " " + help[0].Help().Desc + "  " +
+			help[1].Help().Key + " " + help[1].Help().Desc + "  " +
+			help[2].Help().Key + " " + help[2].Help().Desc + "\n"
 
 	case "input":
 		return fmt.Sprintf(
@@ -255,3 +407,6 @@ func (m model) View() string {
 type errorMsg struct{ err error }
 type successMsg struct{ msg string }
 type refreshListMsg struct{ items []list.Item }
+type selectAddonMsg struct{ addon *addon.Addon }
+type enableAddonMsg struct{ id string }
+type disableAddonMsg struct{ id string }
