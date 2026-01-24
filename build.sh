@@ -12,7 +12,7 @@ case "$1" in
         GOOS=linux GOARCH=amd64 go build -o build/gmod-addon-manager-linux
         ;;
     *)
-        echo "Usage: $0 [windows|linux]"
+        echo "Usage: $0 [linux|windows]"
         exit 1
         ;;
 esac
