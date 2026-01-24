@@ -1,8 +1,8 @@
 # 🎮 GMod Addon Manager
 
-[![Release](https://img.shields.io/github/v/release/yourusername/gmod-addon-manager?style=flat-square)](https://github.com/yourusername/gmod-addon-manager/releases)
-[![License](https://img.shields.io/github/license/yourusername/gmod-addon-manager?style=flat-square)](LICENSE)
-[![Go](https://img.shields.io/github/go-mod/go-version/yourusername/gmod-addon-manager?style=flat-square)](go.mod)
+[![Release](https://img.shields.io/github/v/release/ballattacker/gmod-addon-manager?style=flat-square)](https://github.com/ballattacker/gmod-addon-manager/releases)
+[![License](https://img.shields.io/github/license/ballattacker/gmod-addon-manager?style=flat-square)](LICENSE)
+[![Go](https://img.shields.io/github/go-mod/go-version/ballattacker/gmod-addon-manager?style=flat-square)](go.mod)
 
 A terminal-based application for downloading, installing, and managing Garry's Mod addons from the Steam Workshop.
 
@@ -19,7 +19,7 @@ A terminal-based application for downloading, installing, and managing Garry's M
 
 ### Pre-built Binaries
 
-Download the latest release for your platform from the [Releases page](https://github.com/yourusername/gmod-addon-manager/releases).
+Download the latest release for your platform from the [Releases page](https://github.com/ballattacker/gmod-addon-manager/releases).
 
 ### Building from Source
 
@@ -33,7 +33,7 @@ Download the latest release for your platform from the [Releases page](https://g
 
 1. Clone this repository:
    ```shell
-   git clone https://github.com/yourusername/gmod-addon-manager.git
+   git clone https://github.com/ballattacker/gmod-addon-manager.git
    cd gmod-addon-manager
    ```
 
@@ -83,7 +83,7 @@ You can edit this file to customize paths and settings.
 
 ## Releases
 
-Check out the [Releases page](https://github.com/yourusername/gmod-addon-manager/releases) for pre-built binaries and changelog information.
+Check out the [Releases page](https://github.com/ballattacker/gmod-addon-manager/releases) for pre-built binaries and changelog information.
 
 ## License
 
