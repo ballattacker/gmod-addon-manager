@@ -178,6 +178,22 @@ func (m *Manager) DisableAddon(id string) error {
 	return nil
 }
 
+func (m *Manager) RefreshCache(id string) error {
+	// Clear the cache for this addon
+	cacheFile := m.cache.cacheFilePath(id)
+	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to clear cache: %w", err)
+	}
+
+	// Refresh the addon info by fetching it again
+	_, err := m.GetAddonInfo(id)
+	if err != nil {
+		return fmt.Errorf("failed to refresh addon info: %w", err)
+	}
+
+	return nil
+}
+
 func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 	var addons []Addon
 
