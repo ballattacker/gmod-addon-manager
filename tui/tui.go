@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"gmod-addon-manager/addon"
 
@@ -122,6 +124,7 @@ type delegateKeyMap struct {
 	choose key.Binding
 	enable key.Binding
 	disable key.Binding
+	refreshCache key.Binding
 }
 
 func newDelegateKeyMap() *delegateKeyMap {
@@ -138,6 +141,10 @@ func newDelegateKeyMap() *delegateKeyMap {
 			key.WithKeys("d"),
 			key.WithHelp("d", "disable"),
 		),
+		refreshCache: key.NewBinding(
+			key.WithKeys("c"),
+			key.WithHelp("c", "refresh cache"),
+		),
 	}
 }
 
@@ -146,6 +153,7 @@ func (d delegateKeyMap) ShortHelp() []key.Binding {
 		d.choose,
 		d.enable,
 		d.disable,
+		d.refreshCache,
 	}
 }
 
@@ -155,6 +163,7 @@ func (d delegateKeyMap) FullHelp() [][]key.Binding {
 			d.choose,
 			d.enable,
 			d.disable,
+			d.refreshCache,
 		},
 	}
 }
@@ -192,6 +201,13 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 						return disableAddonMsg{id: selected.addon.ID}
 					}
 				}
+			case key.Matches(msg, keys.refreshCache):
+				if len(m.Items()) > 0 {
+					selected := m.SelectedItem().(addonItem)
+					return func() tea.Msg {
+						return refreshCacheMsg{id: selected.addon.ID}
+					}
+				}
 			}
 		}
 
@@ -203,6 +219,7 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 			keys.choose,
 			keys.enable,
 			keys.disable,
+			keys.refreshCache,
 		}
 	}
 
@@ -212,6 +229,7 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 				keys.choose,
 				keys.enable,
 				keys.disable,
+				keys.refreshCache,
 			},
 		}
 	}
@@ -321,6 +339,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return successMsg{fmt.Sprintf("Addon %s disabled", msg.id)}
 		}
+
+	case refreshCacheMsg:
+		m.loading = true
+		return m, func() tea.Msg {
+			// Clear the cache for this addon
+			cacheFile := filepath.Join(m.manager.cache.cacheDir, fmt.Sprintf("%s.json", msg.id))
+			if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
+				return errorMsg{fmt.Errorf("failed to clear cache: %w", err)}
+			}
+
+			// Refresh the addon info
+			_, err := m.manager.GetAddonInfo(msg.id)
+			if err != nil {
+				return errorMsg{err}
+			}
+
+			// Refresh the list to show updated info
+			items := []list.Item{}
+			addons, err := m.manager.GetAddonsInfo()
+			if err == nil {
+				for _, a := range addons {
+					items = append(items, addonItem{addon: a})
+				}
+			}
+			return refreshListMsg{items}
+		}
 	}
 
 	// Handle input updates
@@ -389,7 +433,7 @@ func (m model) View() string {
 				"Author: %s\n"+
 				"Status: %s\n\n"+
 				"Description:\n%s\n\n"+
-				"[e] Enable  [d] Disable  [Esc] Back\n",
+				"[e] Enable  [d] Disable  [c] Refresh Cache  [Esc] Back\n",
 			a.Title, a.ID, a.Author, status, a.Description,
 		)
 
@@ -404,3 +448,4 @@ type refreshListMsg struct{ items []list.Item }
 type selectAddonMsg struct{ addon *addon.Addon }
 type enableAddonMsg struct{ id string }
 type disableAddonMsg struct{ id string }
+type refreshCacheMsg struct{ id string }
