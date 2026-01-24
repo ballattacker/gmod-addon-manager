@@ -34,12 +34,6 @@ jobs:
         GOARCH: ${{ matrix.goarch }}
       run: go build -o ${{ matrix.output_name }}
 
-    # - name: Upload artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ matrix.output_name }}
-    #     path: ${{ matrix.output_name }}
-
     - name: Release
       uses: softprops/action-gh-release@v2
       if: github.ref_type == 'tag'
