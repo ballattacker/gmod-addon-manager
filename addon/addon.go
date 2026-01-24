@@ -134,6 +134,50 @@ func (m *Manager) GetAddon(id string) error {
 	return nil
 }
 
+func (m *Manager) EnableAddon(id string) error {
+	// Check if addon is installed
+	addonDir := filepath.Join(m.config.OutDir, id)
+	if _, err := os.Stat(addonDir); os.IsNotExist(err) {
+		return fmt.Errorf("addon %s is not installed", id)
+	}
+
+	// Check if already enabled
+	addonSymlink := filepath.Join(m.config.AddonDir, id)
+	if _, err := os.Lstat(addonSymlink); err == nil {
+		return fmt.Errorf("addon %s is already enabled", id)
+	}
+
+	// Create symlink to enable the addon
+	if err := os.Symlink(addonDir, addonSymlink); err != nil {
+		return fmt.Errorf("failed to create symlink: %w", err)
+	}
+
+	fmt.Printf("Addon %s enabled successfully.\n", id)
+	return nil
+}
+
+func (m *Manager) DisableAddon(id string) error {
+	// Check if addon is installed
+	addonDir := filepath.Join(m.config.OutDir, id)
+	if _, err := os.Stat(addonDir); os.IsNotExist(err) {
+		return fmt.Errorf("addon %s is not installed", id)
+	}
+
+	// Check if already disabled
+	addonSymlink := filepath.Join(m.config.AddonDir, id)
+	if _, err := os.Lstat(addonSymlink); os.IsNotExist(err) {
+		return fmt.Errorf("addon %s is already disabled", id)
+	}
+
+	// Remove symlink to disable the addon
+	if err := os.Remove(addonSymlink); err != nil {
+		return fmt.Errorf("failed to remove symlink: %w", err)
+	}
+
+	fmt.Printf("Addon %s disabled successfully.\n", id)
+	return nil
+}
+
 func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 	var addons []Addon
 

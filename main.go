@@ -26,6 +26,8 @@ func main() {
 	}
 
 	rootCmd.AddCommand(initGetCmd(addonManager))
+	rootCmd.AddCommand(initEnableCmd(addonManager))
+	rootCmd.AddCommand(initDisableCmd(addonManager))
 	rootCmd.AddCommand(initListCmd(addonManager))
 	rootCmd.AddCommand(initInfoCmd(addonManager))
 
@@ -47,6 +49,38 @@ func initGetCmd(manager *addon.Manager) *cobra.Command {
 				os.Exit(1)
 			}
 			fmt.Printf("Successfully downloaded and installed addon %s\n", args[0])
+		},
+	}
+}
+
+func initEnableCmd(manager *addon.Manager) *cobra.Command {
+	return &cobra.Command{
+		Use:   "enable [addon-id]",
+		Short: "Enable an installed addon",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			err := manager.EnableAddon(args[0])
+			if err != nil {
+				fmt.Printf("Error enabling addon: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("Addon %s enabled successfully\n", args[0])
+		},
+	}
+}
+
+func initDisableCmd(manager *addon.Manager) *cobra.Command {
+	return &cobra.Command{
+		Use:   "disable [addon-id]",
+		Short: "Disable an installed addon",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			err := manager.DisableAddon(args[0])
+			if err != nil {
+				fmt.Printf("Error disabling addon: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("Addon %s disabled successfully\n", args[0])
 		},
 	}
 }
