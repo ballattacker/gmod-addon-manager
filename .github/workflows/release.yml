@@ -1,8 +1,6 @@
 name: Release Build
 
-on:
-  push:
-    branches: [ release ]
+on: push
 
 jobs:
   build:
