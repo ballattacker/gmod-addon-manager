@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"io"
 
 	"gmod-addon-manager/addon"
 
@@ -14,35 +13,8 @@ import (
 
 var (
 	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
 )
-
-type itemDelegate struct{}
-
-func (d itemDelegate) Height() int                             { return 1 }
-func (d itemDelegate) Spacing() int                            { return 0 }
-func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
-func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(addonItem)
-	if !ok {
-		return
-	}
-
-	str := fmt.Sprintf("%d. %s", index+1, i.Title())
-
-	fn := itemStyle.Render
-	if index == m.Index() {
-		fn = func(s string) string {
-			return selectedItemStyle.Render("> " + s)
-		}
-	}
-
-	fmt.Fprintf(w, fn(str))
-}
 
 type model struct {
 	list          list.Model
@@ -65,13 +37,13 @@ func NewModel(manager *addon.Manager) model {
 	}
 
 	// Create the list with custom delegate
-	addonList := list.New(items, itemDelegate{}, 0, 0)
+	addonList := list.New(items, list.NewDefaultDelegate(), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
-	addonList.SetShowStatusBar(false)
-	addonList.SetShowHelp(false)
-	addonList.SetFilteringEnabled(false)
-	addonList.Styles.Title = titleStyle
-	addonList.Styles.PaginationStyle = paginationStyle
+	// addonList.SetShowStatusBar(false)
+	// addonList.SetShowHelp(false)
+	// addonList.SetFilteringEnabled(false)
+	// addonList.Styles.Title = titleStyle
+	// addonList.Styles.PaginationStyle = paginationStyle
 
 	// Initialize text input
 	input := textinput.New()
@@ -100,7 +72,7 @@ func (i addonItem) Description() string {
 	if i.addon.Enabled {
 		status = "✅ Enabled"
 	}
-	return fmt.Sprintf("Author: %s | Status: %s", i.addon.Author, status)
+	return status
 }
 
 func (i addonItem) FilterValue() string { return i.addon.Title }
@@ -188,6 +160,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
+	case tea.WindowSizeMsg:
+		m.list.SetSize(msg.Width, msg.Height)
 
 	case errorMsg:
 		m.error = msg.err
@@ -240,8 +214,9 @@ func (m model) View() string {
 		if len(m.list.Items()) == 0 {
 			return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
 		}
-		return m.list.View() + "\n\n" +
-			"[i] Install new addon  [r] Refresh  [q] Quit\n"
+		return m.list.View()
+		// return m.list.View() + "\n\n" +
+		// 	"[i] Install new addon  [r] Refresh  [q] Quit\n"
 
 	case "input":
 		return fmt.Sprintf(

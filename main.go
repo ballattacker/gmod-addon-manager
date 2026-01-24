@@ -32,7 +32,7 @@ func main() {
 }
 
 func runTUI(manager *addon.Manager) {
-	p := tea.NewProgram(tui.NewModel(manager))
+	p := tea.NewProgram(tui.NewModel(manager), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running TUI: %v\n", err)
 		os.Exit(1)
