@@ -25,7 +25,7 @@ func main() {
 		Long:  "A terminal-based application for downloading, installing, and managing Garry's Mod addons",
 	}
 
-	rootCmd.AddCommand(initDownloadCmd(addonManager))
+	rootCmd.AddCommand(initGetCmd(addonManager))
 	rootCmd.AddCommand(initListCmd(addonManager))
 	rootCmd.AddCommand(initInfoCmd(addonManager))
 
@@ -35,18 +35,18 @@ func main() {
 	}
 }
 
-func initDownloadCmd(manager *addon.Manager) *cobra.Command {
+func initGetCmd(manager *addon.Manager) *cobra.Command {
 	return &cobra.Command{
-		Use:   "download [addon-id]",
-		Short: "Download and install an addon from Steam Workshop",
+		Use:   "get [addon-id]",
+		Short: "Get and install an addon from Steam Workshop",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			err := manager.DownloadAddon(args[0])
+			err := manager.GetAddon(args[0])
 			if err != nil {
-				fmt.Printf("Error downloading addon: %v\n", err)
+				fmt.Printf("Error getting addon: %v\n", err)
 				os.Exit(1)
 			}
-			fmt.Printf("Successfully downloaded and installed addon %s\n", args[0])
+			fmt.Printf("Successfully got and installed addon %s\n", args[0])
 		},
 	}
 }

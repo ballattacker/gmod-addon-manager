@@ -42,8 +42,8 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	}, nil
 }
 
-func (m *Manager) DownloadAddon(id string) error {
-	// Run steamcmd to download the addon with output
+func (m *Manager) GetAddon(id string) error {
+	// Run steamcmd to get the addon with output
 	steamCmd := exec.Command(
 		m.config.SteamCmdPath,
 		"+login", "anonymous",
@@ -55,7 +55,7 @@ func (m *Manager) DownloadAddon(id string) error {
 	steamCmd.Stdout = os.Stdout
 	steamCmd.Stderr = os.Stderr
 
-	fmt.Printf("Downloading addon %s...\n", id)
+	fmt.Printf("Getting addon %s...\n", id)
 	if err := steamCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run steamcmd: %w", err)
 	}
