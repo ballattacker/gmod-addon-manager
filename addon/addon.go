@@ -104,6 +104,7 @@ func (m *Manager) GetAddon(id string) error {
 
 		// For .bin files, we'll treat them as .gma files directly
 		// In a real implementation, you might need proper extraction
+		// TODO: implement `_legacy.bin` extraction
 		if err := os.Rename(filePath, gmaPath); err != nil {
 			return fmt.Errorf("failed to rename .bin file: %w", err)
 		}
