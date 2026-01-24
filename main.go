@@ -7,7 +7,9 @@ import (
 
 	"gmod-addon-manager/addon"
 	"gmod-addon-manager/config"
+	"gmod-addon-manager/tui"
 
+	"github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -19,17 +21,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Check if we should run in TUI mode (no arguments)
+	if len(os.Args) == 1 {
+		runTUI(addonManager)
+		return
+	}
+
+	// Otherwise run in CLI mode
+	runCLI(addonManager)
+}
+
+func runTUI(manager *addon.Manager) {
+	p := tea.NewProgram(tui.NewModel(manager))
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running TUI: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func runCLI(manager *addon.Manager) {
 	var rootCmd = &cobra.Command{
 		Use:   "gmod-addon-manager",
 		Short: "A TUI for managing Garry's Mod addons",
 		Long:  "A terminal-based application for downloading, installing, and managing Garry's Mod addons",
 	}
 
-	rootCmd.AddCommand(initGetCmd(addonManager))
-	rootCmd.AddCommand(initEnableCmd(addonManager))
-	rootCmd.AddCommand(initDisableCmd(addonManager))
-	rootCmd.AddCommand(initListCmd(addonManager))
-	rootCmd.AddCommand(initInfoCmd(addonManager))
+	rootCmd.AddCommand(initGetCmd(manager))
+	rootCmd.AddCommand(initEnableCmd(manager))
+	rootCmd.AddCommand(initDisableCmd(manager))
+	rootCmd.AddCommand(initListCmd(manager))
+	rootCmd.AddCommand(initInfoCmd(manager))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
