@@ -343,14 +343,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case refreshCacheMsg:
 		m.loading = true
 		return m, func() tea.Msg {
-			// Clear the cache for this addon
-			cacheFile := filepath.Join(m.manager.cache.cacheDir, fmt.Sprintf("%s.json", msg.id))
-			if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
-				return errorMsg{fmt.Errorf("failed to clear cache: %w", err)}
-			}
-
-			// Refresh the addon info
-			_, err := m.manager.GetAddonInfo(msg.id)
+			// Use the public RefreshCache method
+			err := m.manager.RefreshCache(msg.id)
 			if err != nil {
 				return errorMsg{err}
 			}
