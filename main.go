@@ -38,7 +38,7 @@ func main() {
 func initGetCmd(manager *addon.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "get [addon-id]",
-		Short: "Get and install an addon from Steam Workshop",
+		Short: "Download and install an addon from Steam Workshop",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := manager.GetAddon(args[0])
@@ -46,7 +46,7 @@ func initGetCmd(manager *addon.Manager) *cobra.Command {
 				fmt.Printf("Error getting addon: %v\n", err)
 				os.Exit(1)
 			}
-			fmt.Printf("Successfully got and installed addon %s\n", args[0])
+			fmt.Printf("Successfully downloaded and installed addon %s\n", args[0])
 		},
 	}
 }

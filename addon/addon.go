@@ -55,7 +55,7 @@ func (m *Manager) GetAddon(id string) error {
 	steamCmd.Stdout = os.Stdout
 	steamCmd.Stderr = os.Stderr
 
-	fmt.Printf("Getting addon %s...\n", id)
+	fmt.Printf("Downloading addon %s...\n", id)
 	if err := steamCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run steamcmd: %w", err)
 	}
