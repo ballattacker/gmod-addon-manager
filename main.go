@@ -46,7 +46,7 @@ func initDownloadCmd(manager *addon.Manager) *cobra.Command {
 		},
 	}
 }
-
+// AI! also printt Enabled status
 func initListCmd(manager *addon.Manager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
