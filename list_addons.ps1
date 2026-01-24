@@ -36,16 +36,16 @@ foreach ($folder in $addon_folders) {
     # Try to fetch addon info from Steam Workshop API
     try {
         $api_url = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-        $params = @{
-            itemcount = 1
-            publishedfileids = @($addon_id)
-        }
+
+        # Create the request body as form-urlencoded
+        $requestBody = "itemcount=1"
+        $requestBody += "&publishedfileids[0]=$addon_id"
 
         if (-not [string]::IsNullOrEmpty($steam_api_key)) {
-            $params.key = $steam_api_key
+            $requestBody += "&key=$steam_api_key"
         }
 
-        $response = Invoke-RestMethod -Uri $api_url -Method Post -Body $params
+        $response = Invoke-RestMethod -Uri $api_url -Method Post -Body $requestBody -ContentType "application/x-www-form-urlencoded"
 
         if ($response.response.publishedfiledetails -and $response.response.publishedfiledetails.Count -gt 0) {
             $details = $response.response.publishedfiledetails[0]
