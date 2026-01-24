@@ -2,8 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"os/exec"
-	"strings"
 
 	"gmod-addon-manager/addon"
 
