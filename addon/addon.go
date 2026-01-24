@@ -174,21 +174,25 @@ func (m *Manager) ListAddons() ([]Addon, error) {
 }
 
 func (m *Manager) GetAddonInfo(id string) (*Addon, error) {
-	// First check if the addon is installed
+	// Check if addon is installed
 	addonDir := filepath.Join(m.config.OutDir, id)
+	isInstalled := true
 	if _, err := os.Stat(addonDir); os.IsNotExist(err) {
-		return nil, fmt.Errorf("addon not installed")
+		isInstalled = false
 	}
 
-	// Check if addon is enabled by checking if symlink exists in addons directory
-	addonSymlink := filepath.Join(m.config.AddonDir, id)
-	_, err := os.Lstat(addonSymlink)
-	isEnabled := !os.IsNotExist(err)
+	// Check if addon is enabled (only if installed)
+	isEnabled := false
+	if isInstalled {
+		addonSymlink := filepath.Join(m.config.AddonDir, id)
+		_, err := os.Lstat(addonSymlink)
+		isEnabled = !os.IsNotExist(err)
+	}
 
 	// Create base addon with local info
 	addon := &Addon{
 		ID:        id,
-		Installed: true,
+		Installed: isInstalled,
 		Enabled:   isEnabled,
 	}
 
