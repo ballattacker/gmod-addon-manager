@@ -25,10 +25,10 @@ func NewDefaultConfig() *Config {
 	return &Config{
 		GModDir:      "C:\\Local\\Garrys Mod",
 		DownloadDir:  filepath.Join(homeDir, "AppData", "Local", "Microsoft", "WinGet", "Packages", "Valve.SteamCMD_Microsoft.Winget.Source_8wekyb3d8bbwe", "steamapps", "workshop", "content", "4000"),
-		AddonDir:     filepath.Join("C:\\Local\\Garrys Mod", "garrysmod", "addons"),
-		OutDir:       filepath.Join("C:\\Local\\Garrys Mod", "garrysmod", "addons", "0", "out"),
+		AddonDir:     "",
+		OutDir:       "",
 		SteamCmdPath: "steamcmd.exe",
-		GMADPath:     filepath.Join("C:\\Local\\Garrys Mod", "bin", "gmad.exe"),
+		GMADPath:     "",
 		SteamAPIKey:  "",
 	}
 }
@@ -47,7 +47,7 @@ func LoadConfig() (*Config, error) {
 		if err := SaveConfig(config); err != nil {
 			return nil, fmt.Errorf("failed to save default config: %w", err)
 		}
-		return config, nil
+		return fillInDefaultPaths(config), nil
 	}
 
 	// Read config file
@@ -62,7 +62,38 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	return &config, nil
+	// Fill in any missing paths based on GModDir
+	return fillInDefaultPaths(&config), nil
+}
+
+func fillInDefaultPaths(config *Config) *Config {
+	// If GModDir is empty, use default
+	if config.GModDir == "" {
+		config.GModDir = "C:\\Local\\Garrys Mod"
+	}
+
+	// Fill in AddonDir if empty
+	if config.AddonDir == "" {
+		config.AddonDir = filepath.Join(config.GModDir, "garrysmod", "addons")
+	}
+
+	// Fill in OutDir if empty
+	if config.OutDir == "" {
+		config.OutDir = filepath.Join(config.AddonDir, "0", "out")
+	}
+
+	// Fill in GMADPath if empty
+	if config.GMADPath == "" {
+		config.GMADPath = filepath.Join(config.GModDir, "bin", "gmad.exe")
+	}
+
+	// Ensure DownloadDir is set (this one can't be deduced from GModDir)
+	if config.DownloadDir == "" {
+		homeDir, _ := os.UserHomeDir()
+		config.DownloadDir = filepath.Join(homeDir, "AppData", "Local", "Microsoft", "WinGet", "Packages", "Valve.SteamCMD_Microsoft.Winget.Source_8wekyb3d8bbwe", "steamapps", "workshop", "content", "4000")
+	}
+
+	return config
 }
 
 func SaveConfig(config *Config) error {
