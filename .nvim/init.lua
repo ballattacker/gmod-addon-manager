@@ -33,9 +33,9 @@ function os.exec(cmd, opts)
 	return s
 end
 
--- vim.keymap.set({ "n" }, "<leader>pr", function()
--- 	os.exec(string.format("odin run %s -out:%s/odin", vim.fn.getcwd(), outdir))
--- end)
+vim.keymap.set({ "n" }, "<leader>pbl", function()
+	os.exec(string.format("make linux"))
+end, { desc = "build for linux" })
 vim.keymap.set({ "n" }, "<leader>pbw", function()
-	os.exec(string.format("./build-windows.sh"))
+	os.exec(string.format("make windows"))
 end, { desc = "build for windows" })
