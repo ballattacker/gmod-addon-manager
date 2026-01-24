@@ -2,6 +2,9 @@ name: Release Build
 
 on: push
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -42,3 +45,5 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         files: ${{ matrix.output_name }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
