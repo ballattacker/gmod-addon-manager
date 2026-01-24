@@ -27,6 +27,7 @@ type Addon struct {
 type Manager struct {
 	config *config.Config
 	cache  *PersistentCache
+	verbose bool
 }
 
 func NewManager(cfg *config.Config) (*Manager, error) {
@@ -39,7 +40,18 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	return &Manager{
 		config: cfg,
 		cache:  cache,
+		verbose: true, // Default to verbose for CLI mode
 	}, nil
+}
+
+func (m *Manager) SetVerbose(verbose bool) {
+	m.verbose = verbose
+}
+
+func (m *Manager) log(message string) {
+	if m.verbose {
+		fmt.Println(message)
+	}
 }
 
 func (m *Manager) GetAddon(id string) error {
@@ -55,11 +67,11 @@ func (m *Manager) GetAddon(id string) error {
 	steamCmd.Stdout = os.Stdout
 	steamCmd.Stderr = os.Stderr
 
-	fmt.Printf("Downloading addon %s...\n", id)
+	m.log(fmt.Sprintf("Downloading addon %s...", id))
 	if err := steamCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run steamcmd: %w", err)
 	}
-	fmt.Println("Download completed.")
+	m.log("Download completed.")
 
 	// Find the downloaded file
 	downloadDir := filepath.Join(m.config.DownloadDir, id)
@@ -113,11 +125,11 @@ func (m *Manager) GetAddon(id string) error {
 		"-out", outDir,
 	)
 
-	fmt.Printf("Extracting addon %s...\n", id)
+	m.log(fmt.Sprintf("Extracting addon %s...", id))
 	if err := gmadCmd.Run(); err != nil {
 		return fmt.Errorf("failed to run gmad: %w", err)
 	}
-	fmt.Println("Extraction completed.")
+	m.log("Extraction completed.")
 
 	// Create symlink to enable the addon
 	addonDir := filepath.Join(m.config.AddonDir, id)
@@ -130,7 +142,7 @@ func (m *Manager) GetAddon(id string) error {
 		return fmt.Errorf("failed to clean up download directory: %w", err)
 	}
 
-	fmt.Printf("Addon %s installed and enabled successfully.\n", id)
+	m.log(fmt.Sprintf("Addon %s installed and enabled successfully.", id))
 	return nil
 }
 
@@ -152,7 +164,7 @@ func (m *Manager) EnableAddon(id string) error {
 		return fmt.Errorf("failed to create symlink: %w", err)
 	}
 
-	fmt.Printf("Addon %s enabled successfully.\n", id)
+	m.log(fmt.Sprintf("Addon %s enabled successfully.", id))
 	return nil
 }
 
@@ -174,7 +186,7 @@ func (m *Manager) DisableAddon(id string) error {
 		return fmt.Errorf("failed to remove symlink: %w", err)
 	}
 
-	fmt.Printf("Addon %s disabled successfully.\n", id)
+	m.log(fmt.Sprintf("Addon %s disabled successfully.", id))
 	return nil
 }
 
@@ -203,7 +215,7 @@ func (m *Manager) RemoveAddon(id string) error {
 		return fmt.Errorf("failed to clear cache: %w", err)
 	}
 
-	fmt.Printf("Addon %s removed successfully.\n", id)
+	m.log(fmt.Sprintf("Addon %s removed successfully.", id))
 	return nil
 }
 
@@ -220,6 +232,7 @@ func (m *Manager) RefreshCache(id string) error {
 		return fmt.Errorf("failed to refresh addon info: %w", err)
 	}
 
+	m.log(fmt.Sprintf("Cache refreshed for addon %s.", id))
 	return nil
 }
 

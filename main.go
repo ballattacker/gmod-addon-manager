@@ -23,11 +23,13 @@ func main() {
 
 	// Check if we should run in TUI mode (no arguments)
 	if len(os.Args) == 1 {
+		// Disable verbose output for TUI mode
+		addonManager.SetVerbose(false)
 		runTUI(addonManager)
 		return
 	}
 
-	// Otherwise run in CLI mode
+	// Otherwise run in CLI mode (verbose output is already enabled by default)
 	runCLI(addonManager)
 }
 
