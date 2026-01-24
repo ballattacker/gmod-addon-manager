@@ -209,6 +209,15 @@ func initConfigCmd(cfg *config.Config) *cobra.Command {
 			fmt.Printf("SteamCMD Path: %s\n", cfg.SteamCmdPath)
 			fmt.Printf("GMAD Path: %s\n", cfg.GMADPath)
 			fmt.Printf("Steam API Key: %s\n", cfg.SteamAPIKey)
+
+			// Show config file location
+			configPath, err := config.GetConfigPath()
+			if err != nil {
+				fmt.Printf("\nWarning: Could not determine config file location: %v\n", err)
+			} else {
+				fmt.Printf("\nConfig file location: %s\n", configPath)
+				fmt.Println("You can edit this file to customize your configuration.")
+			}
 		},
 	}
 }
