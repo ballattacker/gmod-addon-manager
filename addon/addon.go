@@ -142,8 +142,17 @@ func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 		// Get addon info using the existing GetAddonInfo method
 		addonInfo, err := m.GetAddonInfo(addonID)
 		if err != nil {
-			// AI! display the addon with empty or default fields
-			// If we can't get info, skip this addon
+			// Create addon with empty/default fields when we can't get info
+			addon := Addon{
+				ID:        addonID,
+				Installed: true,
+				Enabled:   false,
+				Title:     "",
+				Author:    "",
+				Description: "",
+				Tags:      []string{},
+			}
+			addons = append(addons, addon)
 			continue
 		}
 
