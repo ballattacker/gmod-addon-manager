@@ -277,6 +277,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == "list" {
 				m.state = "input"
 				m.input.Reset()
+				m.input.Focus()
+				return m, nil
 			}
 
 		case key.Matches(msg, m.keys.refreshList):
