@@ -16,7 +16,7 @@ Mod addons from the Steam Workshop.
 
 ### Prerequisites
 
-- Go 1.20+
+- Go 1.24+
 - SteamCMD installed and in your PATH
 - Garry's Mod installed
 
