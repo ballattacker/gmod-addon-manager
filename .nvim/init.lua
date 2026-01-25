@@ -1,11 +1,5 @@
-local lspconfig = require("lspconfig")
-local nvlsp = require("nvchad.configs.lspconfig")
-
-lspconfig.gopls.setup({
-	on_attach = nvlsp.on_attach,
-	on_init = nvlsp.on_init,
-	capabilities = nvlsp.capabilities,
-})
+vim.lsp.enable("gopls")
+require("conform").formatters_by_ft.go = { "gofmt" }
 
 function os.exec(cmd, opts)
 	opts = opts or {}
