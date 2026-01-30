@@ -88,6 +88,7 @@ type listKeyMap struct {
 	togglePagination key.Binding
 	toggleHelpMenu   key.Binding
 	installItem      key.Binding
+	viewItem         key.Binding
 	refreshList      key.Binding
 	quit             key.Binding
 }
@@ -97,6 +98,10 @@ func newListKeyMap() *listKeyMap {
 		installItem: key.NewBinding(
 			key.WithKeys("i"),
 			key.WithHelp("i", "install"),
+		),
+		viewItem: key.NewBinding(
+			key.WithKeys("v"),
+			key.WithHelp("v", "view"),
 		),
 		refreshList: key.NewBinding(
 			key.WithKeys("r"),
@@ -409,7 +414,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.state == "input" {
 		m.input, cmd = m.input.Update(msg)
 		if msg, ok := msg.(tea.KeyMsg); ok {
-			if msg.String() == "enter" {
+			switch msg.String() {
+			case "enter":
 				addonID := m.input.Value()
 				if addonID != "" {
 					m.loading = true
@@ -419,6 +425,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							return errorMsg{err}
 						}
 						return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
+					}
+				}
+			case "v":
+				addonID := m.input.Value()
+				if addonID != "" {
+					m.loading = true
+					return m, func() tea.Msg {
+						addonInfo, err := m.manager.GetAddonInfo(addonID)
+						if err != nil {
+							return errorMsg{err}
+						}
+						return selectAddonMsg{addon: addonInfo}
 					}
 				}
 			}
