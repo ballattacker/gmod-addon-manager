@@ -134,17 +134,17 @@ func initRemoveCmd(manager *addon.Manager) *cobra.Command {
 
 func formatAddonInfo(addon addon.Addon) string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("ID: %s\n", addon.ID))
+	fmt.Fprintf(&sb, "ID: %s\n", addon.ID)
 	if addon.Title != "" {
-		sb.WriteString(fmt.Sprintf("Title: %s\n", addon.Title))
+		fmt.Fprintf(&sb, "Title: %s\n", addon.Title)
 	}
 	if addon.Author != "" {
-		sb.WriteString(fmt.Sprintf("Author: %s\n", addon.Author))
+		fmt.Fprintf(&sb, "Author: %s\n", addon.Author)
 	}
 	if len(addon.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("Tags: %s\n", strings.Join(addon.Tags, ", ")))
+		fmt.Fprintf(&sb, "Tags: %s\n", strings.Join(addon.Tags, ", "))
 	}
-	sb.WriteString(fmt.Sprintf("Enabled: %t\n", addon.Enabled))
+	fmt.Fprintf(&sb, "Enabled: %t\n", addon.Enabled)
 	return sb.String()
 }
 
