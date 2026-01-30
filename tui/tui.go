@@ -49,6 +49,7 @@ func NewModel(manager *addon.Manager) model {
 	// Initialize text input
 	input := textinput.New()
 	input.Placeholder = "Enter addon ID"
+	input.Width = 20
 	input.Focus()
 
 	return model{
