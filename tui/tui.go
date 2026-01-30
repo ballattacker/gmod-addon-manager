@@ -347,6 +347,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case selectAddonMsg:
 		m.selectedAddon = msg.addon
+		m.loading = false
 		m.state = "detail"
 		return m, nil
 
@@ -487,10 +488,10 @@ func (m model) View() string {
 				"Title: %s\n"+
 				"ID: %s\n"+
 				"Author: %s\n"+
-				"Status: %s\n\n"+
-				"Description:\n%s\n\n"+
+				"Status: %s\n"+
+				"Installed: %t\n"+
 				"[e] Enable  [d] Disable  [c] Refresh Cache  [x] Remove  [Esc] Back\n",
-			a.Title, a.ID, a.Author, status, a.Description,
+			a.Title, a.ID, a.Author, status, a.Installed,
 		)
 
 	default:
