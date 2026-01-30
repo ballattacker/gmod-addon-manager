@@ -467,7 +467,7 @@ func (m model) View() string {
 
 	case "input":
 		return fmt.Sprintf(
-			"Install new addon\n\n%s\n\n[Enter] Install  [Esc] Cancel\n",
+			"Install new addon\n\n%s\n\n[Enter] Install  [v] View Info  [Esc] Cancel\n",
 			m.input.View(),
 		)
 
