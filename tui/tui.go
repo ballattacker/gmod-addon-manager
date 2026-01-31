@@ -35,7 +35,9 @@ func NewModel(manager *addon.Manager) model {
 	}
 
 	// Create the list with custom delegate
-	addonList := list.New(items, newItemDelegate(newDelegateKeyMap()), 0, 0)
+	keys := newListKeyMap()
+	delegateKeys := newDelegateKeyMap()
+	addonList := list.New(items, newItemDelegate(delegateKeys), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.KeyMap.PrevPage = key.NewBinding(
 		key.WithKeys("left", "h", "pgup"),
@@ -45,6 +47,18 @@ func NewModel(manager *addon.Manager) model {
 		key.WithKeys("right", "l", "pgdown"),
 		key.WithHelp("→/l/pgdn", "next page"),
 	)
+	help := []key.Binding{
+		keys.installItem,
+		keys.viewItem,
+		keys.refreshList,
+		keys.quit,
+	}
+	addonList.AdditionalShortHelpKeys = func() []key.Binding {
+		return help
+	}
+	addonList.AdditionalFullHelpKeys = func() []key.Binding {
+		return help
+	}
 
 	// Initialize text input
 	input := textinput.New()
@@ -58,8 +72,8 @@ func NewModel(manager *addon.Manager) model {
 		input:        input,
 		state:        "list",
 		loading:      false,
-		keys:         newListKeyMap(),
-		delegateKeys: newDelegateKeyMap(),
+		keys:         keys,
+		delegateKeys: delegateKeys,
 	}
 }
 
@@ -82,15 +96,10 @@ func (i addonItem) Description() string {
 func (i addonItem) FilterValue() string { return i.addon.Title }
 
 type listKeyMap struct {
-	toggleSpinner    key.Binding
-	toggleTitleBar   key.Binding
-	toggleStatusBar  key.Binding
-	togglePagination key.Binding
-	toggleHelpMenu   key.Binding
-	installItem      key.Binding
-	viewItem         key.Binding
-	refreshList      key.Binding
-	quit             key.Binding
+	installItem key.Binding
+	viewItem    key.Binding
+	refreshList key.Binding
+	quit        key.Binding
 }
 
 func newListKeyMap() *listKeyMap {
@@ -111,24 +120,6 @@ func newListKeyMap() *listKeyMap {
 			key.WithKeys("q", "ctrl+c"),
 			key.WithHelp("q", "quit"),
 		),
-	}
-}
-
-func (k *listKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{
-		k.installItem,
-		k.refreshList,
-		k.quit,
-	}
-}
-
-func (k *listKeyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{
-			k.installItem,
-			k.refreshList,
-			k.quit,
-		},
 	}
 }
 
@@ -162,28 +153,6 @@ func newDelegateKeyMap() *delegateKeyMap {
 			key.WithKeys("x"),
 			key.WithHelp("x", "remove"),
 		),
-	}
-}
-
-func (d delegateKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{
-		d.choose,
-		d.enable,
-		d.disable,
-		d.refreshCache,
-		d.remove,
-	}
-}
-
-func (d delegateKeyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{
-			d.choose,
-			d.enable,
-			d.disable,
-			d.refreshCache,
-			d.remove,
-		},
 	}
 }
 
