@@ -191,8 +191,8 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
-		if _, ok := m.SelectedItem().(addonItem); ok {
-		} else {
+		selected, ok := m.SelectedItem().(addonItem)
+		if !ok {
 			return nil
 		}
 
@@ -200,39 +200,24 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 		case tea.KeyMsg:
 			switch {
 			case key.Matches(msg, keys.choose):
-				if len(m.Items()) > 0 {
-					selected := m.SelectedItem().(addonItem)
-					return func() tea.Msg {
-						return selectAddonMsg{addon: &selected.addon}
-					}
+				return func() tea.Msg {
+					return selectAddonMsg{addon: &selected.addon}
 				}
 			case key.Matches(msg, keys.enable):
-				if len(m.Items()) > 0 {
-					selected := m.SelectedItem().(addonItem)
-					return func() tea.Msg {
-						return enableAddonMsg{id: selected.addon.ID}
-					}
+				return func() tea.Msg {
+					return enableAddonMsg{id: selected.addon.ID}
 				}
 			case key.Matches(msg, keys.disable):
-				if len(m.Items()) > 0 {
-					selected := m.SelectedItem().(addonItem)
-					return func() tea.Msg {
-						return disableAddonMsg{id: selected.addon.ID}
-					}
+				return func() tea.Msg {
+					return disableAddonMsg{id: selected.addon.ID}
 				}
 			case key.Matches(msg, keys.refreshCache):
-				if len(m.Items()) > 0 {
-					selected := m.SelectedItem().(addonItem)
-					return func() tea.Msg {
-						return refreshCacheMsg{id: selected.addon.ID}
-					}
+				return func() tea.Msg {
+					return refreshCacheMsg{id: selected.addon.ID}
 				}
 			case key.Matches(msg, keys.remove):
-				if len(m.Items()) > 0 {
-					selected := m.SelectedItem().(addonItem)
-					return func() tea.Msg {
-						return removeAddonMsg{id: selected.addon.ID}
-					}
+				return func() tea.Msg {
+					return removeAddonMsg{id: selected.addon.ID}
 				}
 			}
 		}
@@ -240,26 +225,20 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 		return nil
 	}
 
+	help := []key.Binding{
+		keys.choose,
+		keys.enable,
+		keys.disable,
+		keys.refreshCache,
+		keys.remove,
+	}
+
 	d.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{
-			keys.choose,
-			keys.enable,
-			keys.disable,
-			keys.refreshCache,
-			keys.remove,
-		}
+		return help
 	}
 
 	d.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{
-			{
-				keys.choose,
-				keys.enable,
-				keys.disable,
-				keys.refreshCache,
-				keys.remove,
-			},
-		}
+		return [][]key.Binding{help}
 	}
 
 	return d
