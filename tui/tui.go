@@ -47,17 +47,17 @@ func NewModel(manager *addon.Manager) model {
 		key.WithKeys("right", "l", "pgdown"),
 		key.WithHelp("→/l/pgdn", "next page"),
 	)
-	help := []key.Binding{
-		keys.installItem,
-		keys.viewItem,
-		keys.refreshList,
-		keys.quit,
-	}
 	addonList.AdditionalShortHelpKeys = func() []key.Binding {
-		return help
+		return []key.Binding{
+			keys.installItem,
+		}
 	}
 	addonList.AdditionalFullHelpKeys = func() []key.Binding {
-		return help
+		return []key.Binding{
+			keys.installItem,
+			keys.refreshList,
+			keys.quit,
+		}
 	}
 
 	// Initialize text input
@@ -97,7 +97,6 @@ func (i addonItem) FilterValue() string { return i.addon.Title }
 
 type listKeyMap struct {
 	installItem key.Binding
-	viewItem    key.Binding
 	refreshList key.Binding
 	quit        key.Binding
 }
@@ -107,10 +106,6 @@ func newListKeyMap() *listKeyMap {
 		installItem: key.NewBinding(
 			key.WithKeys("i"),
 			key.WithHelp("i", "install"),
-		),
-		viewItem: key.NewBinding(
-			key.WithKeys("v"),
-			key.WithHelp("v", "view"),
 		),
 		refreshList: key.NewBinding(
 			key.WithKeys("r"),
@@ -134,7 +129,7 @@ type delegateKeyMap struct {
 func newDelegateKeyMap() *delegateKeyMap {
 	return &delegateKeyMap{
 		choose: key.NewBinding(
-			key.WithKeys("enter"),
+			key.WithKeys("enter", "v"),
 			key.WithHelp("enter", "view"),
 		),
 		enable: key.NewBinding(
@@ -194,20 +189,20 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 		return nil
 	}
 
-	help := []key.Binding{
-		keys.choose,
-		keys.enable,
-		keys.disable,
-		keys.refreshCache,
-		keys.remove,
-	}
-
 	d.ShortHelpFunc = func() []key.Binding {
-		return help
+		return []key.Binding{
+			keys.choose,
+		}
 	}
 
 	d.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{help}
+		return [][]key.Binding{{
+			keys.choose,
+			keys.enable,
+			keys.disable,
+			keys.refreshCache,
+			keys.remove,
+		}}
 	}
 
 	return d
