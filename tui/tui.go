@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"gmod-addon-manager/addon"
 
@@ -24,6 +25,7 @@ type model struct {
 	keys          *listKeyMap
 	delegateKeys  *delegateKeyMap
 	commonKeys    *commonKeyMap
+	inputKeys     *inputKeyMap
 	help          help.Model
 }
 
@@ -67,8 +69,8 @@ func NewModel(manager *addon.Manager) model {
 	// Initialize text input
 	input := textinput.New()
 	input.Placeholder = "Enter addon ID"
-	input.Width = 20
 	input.Focus()
+	inputKeys := newInputKeyMap()
 
 	return model{
 		list:         addonList,
@@ -79,6 +81,7 @@ func NewModel(manager *addon.Manager) model {
 		keys:         keys,
 		delegateKeys: delegateKeys,
 		commonKeys:   commonKeys,
+		inputKeys:    inputKeys,
 		help:         help.New(),
 	}
 }
@@ -227,6 +230,29 @@ func newCommonKeyMap() *commonKeyMap {
 	}
 }
 
+type inputKeyMap struct {
+	install key.Binding
+	info    key.Binding
+	cancel  key.Binding
+}
+
+func newInputKeyMap() *inputKeyMap {
+	return &inputKeyMap{
+		install: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "install"),
+		),
+		info: key.NewBinding(
+			key.WithKeys("v"),
+			key.WithHelp("v", "view info"),
+		),
+		cancel: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("esc", "cancel"),
+		),
+	}
+}
+
 func (m model) Init() tea.Cmd {
 	return nil
 }
@@ -281,6 +307,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
+		m.input.Width = msg.Width
 		m.help.Width = msg.Width
 
 	case errorMsg:
@@ -378,8 +405,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.state == "input" {
 		m.input, cmd = m.input.Update(msg)
 		if msg, ok := msg.(tea.KeyMsg); ok {
-			switch msg.String() {
-			case "enter":
+			switch {
+			case key.Matches(msg, m.inputKeys.install):
 				addonID := m.input.Value()
 				if addonID != "" {
 					m.loading = true
@@ -391,7 +418,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
 					}
 				}
-			case "v":
+			case key.Matches(msg, m.inputKeys.info):
 				addonID := m.input.Value()
 				if addonID != "" {
 					m.loading = true
@@ -430,10 +457,15 @@ func (m model) View() string {
 		return m.list.View()
 
 	case "input":
-		return fmt.Sprintf(
-			"Install new addon\n\n%s\n\n[Enter] Install  [v] View Info  [Esc] Cancel\n",
+		return strings.Join([]string{
+			"Install new addon",
 			m.input.View(),
-		)
+			m.help.ShortHelpView([]key.Binding{
+				m.inputKeys.install,
+				m.inputKeys.info,
+				m.inputKeys.cancel,
+			}),
+		}, "\n\n")
 
 	case "detail":
 		if m.selectedAddon == nil {
