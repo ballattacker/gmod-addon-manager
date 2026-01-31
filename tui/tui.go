@@ -5,6 +5,7 @@ import (
 
 	"gmod-addon-manager/addon"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -22,6 +23,8 @@ type model struct {
 	loading       bool
 	keys          *listKeyMap
 	delegateKeys  *delegateKeyMap
+	commonKeys    *commonKeyMap
+	help          help.Model
 }
 
 func NewModel(manager *addon.Manager) model {
@@ -37,6 +40,7 @@ func NewModel(manager *addon.Manager) model {
 	// Create the list with custom delegate
 	keys := newListKeyMap()
 	delegateKeys := newDelegateKeyMap()
+	commonKeys := newCommonKeyMap()
 	addonList := list.New(items, newItemDelegate(delegateKeys), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.KeyMap.PrevPage = key.NewBinding(
@@ -74,6 +78,8 @@ func NewModel(manager *addon.Manager) model {
 		loading:      false,
 		keys:         keys,
 		delegateKeys: delegateKeys,
+		commonKeys:   commonKeys,
+		help:         help.New(),
 	}
 }
 
@@ -208,6 +214,19 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 	return d
 }
 
+type commonKeyMap struct {
+	cancel key.Binding
+}
+
+func newCommonKeyMap() *commonKeyMap {
+	return &commonKeyMap{
+		cancel: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("esc", "cancel"),
+		),
+	}
+}
+
 func (m model) Init() tea.Cmd {
 	return nil
 }
@@ -247,7 +266,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Handle Esc key for detail view
-		if msg.String() == "esc" {
+		if key.Matches(msg, m.commonKeys.cancel) {
 			switch m.state {
 			case "detail":
 				m.state = "list"
@@ -262,6 +281,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
+		m.help.Width = msg.Width
 
 	case errorMsg:
 		m.error = msg.err
@@ -433,7 +453,14 @@ func (m model) View() string {
 				"Author: %s\n"+
 				"Status: %s\n"+
 				"Installed: %t\n"+
-				"[e] Enable  [d] Disable  [c] Refresh Cache  [x] Remove  [Esc] Back\n",
+				"\n"+
+				m.help.ShortHelpView([]key.Binding{
+					m.delegateKeys.enable,
+					m.delegateKeys.disable,
+					m.delegateKeys.refreshCache,
+					m.delegateKeys.remove,
+					m.commonKeys.cancel,
+				}),
 			a.Title, a.ID, a.Author, status, a.Installed,
 		)
 
