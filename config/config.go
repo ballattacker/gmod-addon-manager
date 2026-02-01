@@ -12,6 +12,7 @@ type Config struct {
 	DownloadDir  string `json:"download_dir"`
 	AddonDir     string `json:"addon_dir"`
 	OutDir       string `json:"out_dir"`
+	TmpDir       string `json:"tmp_dir"`
 	SteamCmdPath string `json:"steamcmd_path"`
 	GMADPath     string `json:"gmad_path"`
 	SteamAPIKey  string `json:"steam_api_key"`
@@ -27,6 +28,7 @@ func NewDefaultConfig() *Config {
 		DownloadDir:  filepath.Join(homeDir, "AppData", "Local", "Microsoft", "WinGet", "Packages", "Valve.SteamCMD_Microsoft.Winget.Source_8wekyb3d8bbwe", "steamapps", "workshop", "content", "4000"),
 		AddonDir:     "",
 		OutDir:       "",
+		TmpDir:       "",
 		SteamCmdPath: "steamcmd.exe",
 		GMADPath:     "",
 		SteamAPIKey:  "",
@@ -80,6 +82,11 @@ func fillInDefaultPaths(config *Config) *Config {
 	// Fill in OutDir if empty
 	if config.OutDir == "" {
 		config.OutDir = filepath.Join(config.AddonDir, "0", "out")
+	}
+
+	// Fill in TmpDir if empty
+	if config.TmpDir == "" {
+		config.TmpDir = filepath.Join(config.AddonDir, "0", "tmp")
 	}
 
 	// Fill in GMADPath if empty

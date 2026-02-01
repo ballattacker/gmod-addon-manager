@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"gmod-addon-manager/config"
+	"gmod-addon-manager/file"
 )
 
 type Addon struct {
@@ -25,8 +26,8 @@ type Addon struct {
 }
 
 type Manager struct {
-	config *config.Config
-	cache  *PersistentCache
+	config  *config.Config
+	cache   *PersistentCache
 	verbose bool
 }
 
@@ -38,8 +39,8 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	}
 
 	return &Manager{
-		config: cfg,
-		cache:  cache,
+		config:  cfg,
+		cache:   cache,
 		verbose: true, // Default to verbose for CLI mode
 	}, nil
 }
@@ -75,19 +76,13 @@ func (m *Manager) GetAddon(id string) error {
 
 	// Find the downloaded file
 	downloadDir := filepath.Join(m.config.DownloadDir, id)
-	files, err := os.ReadDir(downloadDir)
-	if err != nil {
-		return fmt.Errorf("failed to read download directory: %w", err)
-	}
-
-	if len(files) == 0 {
-		return fmt.Errorf("no files found in download directory")
-	}
 
 	// Get the first file (should be either .gma or _legacy.bin)
-	downloadedFile := files[0]
-	filePath := filepath.Join(downloadDir, downloadedFile.Name())
-	fileName := downloadedFile.Name()
+	downloadedFileName, err := file.First(downloadDir)
+	if err != nil {
+		return fmt.Errorf("failed to get the first file: %w", err)
+	}
+	downloadedFilePath := filepath.Join(downloadDir, downloadedFileName)
 
 	// Create output directory
 	outDir := filepath.Join(m.config.OutDir, id)
@@ -95,27 +90,26 @@ func (m *Manager) GetAddon(id string) error {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	var gmaPath string
+	// Create tmp directory
+	tmpDir := filepath.Join(m.config.TmpDir, id)
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		return fmt.Errorf("failed to create tmp directory: %w", err)
+	}
+
+	gmaPath := filepath.Join(tmpDir, id+".gma")
 
 	// Handle .bin file (extract and rename to .gma)
-	if strings.HasSuffix(fileName, "_legacy.bin") {
-		// Extract directly in the download directory
-		gmaPath = filepath.Join(downloadDir, id+".gma")
-
-		// For .bin files, we'll treat them as .gma files directly
-		// In a real implementation, you might need proper extraction
-		// TODO: implement `_legacy.bin` extraction
-		if err := os.Rename(filePath, gmaPath); err != nil {
-			return fmt.Errorf("failed to rename .bin file: %w", err)
+	if strings.HasSuffix(downloadedFileName, "_legacy.bin") {
+		if err := file.ExtractLZMA(downloadedFilePath, gmaPath); err != nil {
+			return fmt.Errorf("failed to extract bin file: %w", err)
 		}
-	} else if strings.HasSuffix(fileName, ".gma") {
-		// Move the .gma file to download directory with consistent name
-		gmaPath = filepath.Join(downloadDir, id+".gma")
-		if err := os.Rename(filePath, gmaPath); err != nil {
-			return fmt.Errorf("failed to rename .gma file: %w", err)
+	} else if strings.HasSuffix(downloadedFileName, ".gma") {
+		// gmaPath = downloadedFilePath
+		if err := file.Copy(downloadedFilePath, gmaPath); err != nil {
+			return fmt.Errorf("failed to copy gma file: %w", err)
 		}
 	} else {
-		return fmt.Errorf("unknown file type: %s", fileName)
+		return fmt.Errorf("unknown file type: %s", downloadedFileName)
 	}
 
 	// Execute GMAD tool to extract directly to output directory
@@ -132,16 +126,12 @@ func (m *Manager) GetAddon(id string) error {
 	}
 	m.log("Extraction completed.")
 
-	// Create symlink to enable the addon
-	addonDir := filepath.Join(m.config.AddonDir, id)
-	if err := os.Symlink(outDir, addonDir); err != nil {
-		return fmt.Errorf("failed to create symlink: %w", err)
+	// Clean up tmp directory
+	if err := os.RemoveAll(tmpDir); err != nil {
+		return fmt.Errorf("failed to clean up tmp directory: %w", err)
 	}
 
-	// Clean up download directory
-	if err := os.RemoveAll(downloadDir); err != nil {
-		return fmt.Errorf("failed to clean up download directory: %w", err)
-	}
+	m.EnableAddon(id)
 
 	m.log(fmt.Sprintf("Addon %s installed and enabled successfully.", id))
 	return nil
@@ -257,13 +247,13 @@ func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 		if err != nil {
 			// Create addon with empty/default fields when we can't get info
 			addon := Addon{
-				ID:        addonID,
-				Installed: true,
-				Enabled:   false,
-				Title:     "",
-				Author:    "",
+				ID:          addonID,
+				Installed:   true,
+				Enabled:     false,
+				Title:       "",
+				Author:      "",
 				Description: "",
-				Tags:      []string{},
+				Tags:        []string{},
 			}
 			addons = append(addons, addon)
 			continue
@@ -374,16 +364,16 @@ type WorkshopResponse struct {
 }
 
 type WorkshopAddon struct {
-	PublishedFileID string   `json:"publishedfileid"`
-	Title           string   `json:"title"`
-	Creator         string   `json:"creator"`
-	TimeCreated     int64    `json:"time_created"`
-	TimeUpdated     int64    `json:"time_updated"`
-	Views           int      `json:"views"`
-	Subscriptions   int      `json:"subscriptions"`
-	Favorited       int      `json:"favorited"`
-	Tags            []Tag    `json:"tags"`
-	Description     string   `json:"description"`
+	PublishedFileID string `json:"publishedfileid"`
+	Title           string `json:"title"`
+	Creator         string `json:"creator"`
+	TimeCreated     int64  `json:"time_created"`
+	TimeUpdated     int64  `json:"time_updated"`
+	Views           int    `json:"views"`
+	Subscriptions   int    `json:"subscriptions"`
+	Favorited       int    `json:"favorited"`
+	Tags            []Tag  `json:"tags"`
+	Description     string `json:"description"`
 }
 
 type Tag struct {
