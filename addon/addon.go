@@ -126,12 +126,12 @@ func (m *Manager) GetAddon(id string) error {
 	}
 	m.log("Extraction completed.")
 
+	m.EnableAddon(id)
+
 	// Clean up tmp directory
 	if err := os.RemoveAll(tmpDir); err != nil {
 		return fmt.Errorf("failed to clean up tmp directory: %w", err)
 	}
-
-	m.EnableAddon(id)
 
 	m.log(fmt.Sprintf("Addon %s installed and enabled successfully.", id))
 	return nil
