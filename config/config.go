@@ -24,7 +24,7 @@ func NewDefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
 
 	return &Config{
-		GModDir:      "C:\\Local\\GarrysMod",
+		GModDir:      "C:\\Games\\GarrysMod",
 		DownloadDir:  filepath.Join(homeDir, "AppData", "Local", "Microsoft", "WinGet", "Packages", "Valve.SteamCMD_Microsoft.Winget.Source_8wekyb3d8bbwe", "steamapps", "workshop", "content", "4000"),
 		AddonDir:     "",
 		OutDir:       "",
@@ -71,7 +71,7 @@ func LoadConfig() (*Config, error) {
 func fillInDefaultPaths(config *Config) *Config {
 	// If GModDir is empty, use default
 	if config.GModDir == "" {
-		config.GModDir = "C:\\Local\\GarrysMod"
+		config.GModDir = "C:\\Games\\GarrysMod"
 	}
 
 	// Fill in AddonDir if empty
