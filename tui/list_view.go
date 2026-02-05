@@ -82,9 +82,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help.Width = msg.Width
 
 	case successMsg:
-		if msg.refreshList {
-			m.RefreshItems()
-		}
+		m.RefreshItems()
 	}
 
 	m.list, cmd = m.list.Update(msg)

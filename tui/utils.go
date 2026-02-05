@@ -145,7 +145,7 @@ func newItemDelegate(delegateKeys *delegateKeyMap, manager *addon.Manager) list.
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Addon enabled", refreshList: true}
+					return successMsg{"Addon enabled"}
 				}
 			case key.Matches(msg, delegateKeys.disable):
 				return func() tea.Msg {
@@ -153,7 +153,7 @@ func newItemDelegate(delegateKeys *delegateKeyMap, manager *addon.Manager) list.
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Addon disabled", refreshList: true}
+					return successMsg{"Addon disabled"}
 				}
 			case key.Matches(msg, delegateKeys.refreshCache):
 				return func() tea.Msg {
@@ -161,7 +161,7 @@ func newItemDelegate(delegateKeys *delegateKeyMap, manager *addon.Manager) list.
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Cache refreshed", refreshList: true}
+					return successMsg{"Cache refreshed"}
 				}
 			case key.Matches(msg, delegateKeys.remove):
 				return func() tea.Msg {
@@ -169,7 +169,7 @@ func newItemDelegate(delegateKeys *delegateKeyMap, manager *addon.Manager) list.
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Addon removed", refreshList: true}
+					return successMsg{"Addon removed"}
 				}
 			}
 		}

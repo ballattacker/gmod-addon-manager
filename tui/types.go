@@ -7,11 +7,7 @@ import (
 // Message types for the TUI application
 
 type errorMsg struct{ err error }
-
-type successMsg struct {
-	msg         string
-	refreshList bool // whether to refresh the addon list (default: true)
-}
+type successMsg struct{ msg string }
 
 // View transition messages
 type requestListViewMsg struct{}

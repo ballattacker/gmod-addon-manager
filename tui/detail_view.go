@@ -47,7 +47,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: fmt.Sprintf("Addon %s enabled", m.addon.ID), refreshList: true}
+					return successMsg{fmt.Sprintf("Addon %s enabled", m.addon.ID)}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.disable):
@@ -57,7 +57,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: fmt.Sprintf("Addon %s disabled", m.addon.ID), refreshList: true}
+					return successMsg{fmt.Sprintf("Addon %s disabled", m.addon.ID)}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.refreshCache):
@@ -67,7 +67,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Cache refreshed", refreshList: true}
+					return successMsg{"Cache refreshed"}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.remove):
@@ -77,7 +77,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: "Addon removed", refreshList: true}
+					return successMsg{"Addon removed"}
 				}
 			}
 		}

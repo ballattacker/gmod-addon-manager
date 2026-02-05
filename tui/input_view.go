@@ -56,7 +56,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{msg: fmt.Sprintf("Addon %s installed successfully", addonID), refreshList: true}
+					return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
 				}
 			}
 		case key.Matches(msg, m.keys.info):

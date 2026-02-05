@@ -37,6 +37,14 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
+	// If there's an error, any key press dismisses it
+	if m.error != nil {
+		if _, ok := msg.(tea.KeyMsg); ok {
+			m.error = nil
+			return m, nil
+		}
+	}
+
 	switch msg := msg.(type) {
 	case errorMsg:
 		m.error = msg.err
@@ -46,16 +54,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case successMsg:
 		m.error = nil
 		m.loading = false
-		// Refresh list if requested
-		if msg.refreshList {
-			m.listModel.RefreshItems()
-		}
-		// Stay on current view (don't go back to list)
 		return m, nil
 
 	case requestListViewMsg:
 		m.state = "list"
-		m.error = nil
 		return m, nil
 
 	case requestInputViewMsg:
