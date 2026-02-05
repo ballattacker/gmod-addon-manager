@@ -20,20 +20,11 @@ type ListModel struct {
 }
 
 func NewListModel(manager *addon.Manager) *ListModel {
-	// Initialize the addon list
-	items := []list.Item{}
-	addons, err := manager.GetAddonsInfo()
-	if err == nil {
-		for _, a := range addons {
-			items = append(items, addonItem{addon: a})
-		}
-	}
-
 	// Create the list with custom delegate
 	keys := newListKeyMap()
 	delegateKeys := newDelegateKeyMap()
 	commonKeys := newCommonKeyMap()
-	addonList := list.New(items, newItemDelegate(delegateKeys), 0, 0)
+	addonList := list.New(buildAddonItems(manager), newItemDelegate(delegateKeys, manager), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.KeyMap.PrevPage = key.NewBinding(
 		key.WithKeys("left", "h", "pgup"),
@@ -80,31 +71,40 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.installItem):
 			return m, func() tea.Msg {
-				return requestViewMsg{view: "input"}
+				return requestInputViewMsg{}
 			}
 		case key.Matches(msg, m.keys.refreshList):
-			return m, func() tea.Msg {
-				items := []list.Item{}
-				addons, err := m.manager.GetAddonsInfo()
-				if err == nil {
-					for _, a := range addons {
-						items = append(items, addonItem{addon: a})
-					}
-				}
-				return refreshListMsg{items}
-			}
+			m.RefreshItems()
 		}
 
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
 		m.help.Width = msg.Width
 
-	case refreshListMsg:
-		m.list.SetItems(msg.items)
+	case successMsg:
+		if msg.refreshList {
+			m.RefreshItems()
+		}
 	}
 
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
+}
+
+func (m *ListModel) RefreshItems() {
+	m.list.SetItems(buildAddonItems(m.manager))
+}
+
+// buildAddonItems creates list items from addon manager data
+func buildAddonItems(manager *addon.Manager) []list.Item {
+	items := []list.Item{}
+	addons, err := manager.GetAddonsInfo()
+	if err == nil {
+		for _, a := range addons {
+			items = append(items, addonItem{addon: a})
+		}
+	}
+	return items
 }
 
 func (m *ListModel) View() string {

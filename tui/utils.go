@@ -123,7 +123,7 @@ func (i addonItem) Description() string {
 func (i addonItem) FilterValue() string { return i.addon.Title }
 
 // newItemDelegate creates a list delegate with key bindings for addon items
-func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
+func newItemDelegate(delegateKeys *delegateKeyMap, manager *addon.Manager) list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
@@ -135,25 +135,41 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
-			case key.Matches(msg, keys.choose):
+			case key.Matches(msg, delegateKeys.choose):
 				return func() tea.Msg {
-					return selectAddonMsg{addon: &selected.addon}
+					return requestDetailViewMsg{addon: &selected.addon}
 				}
-			case key.Matches(msg, keys.enable):
+			case key.Matches(msg, delegateKeys.enable):
 				return func() tea.Msg {
-					return enableAddonMsg{id: selected.addon.ID}
+					err := manager.EnableAddon(selected.addon.ID)
+					if err != nil {
+						return errorMsg{err}
+					}
+					return successMsg{msg: "Addon enabled", refreshList: true}
 				}
-			case key.Matches(msg, keys.disable):
+			case key.Matches(msg, delegateKeys.disable):
 				return func() tea.Msg {
-					return disableAddonMsg{id: selected.addon.ID}
+					err := manager.DisableAddon(selected.addon.ID)
+					if err != nil {
+						return errorMsg{err}
+					}
+					return successMsg{msg: "Addon disabled", refreshList: true}
 				}
-			case key.Matches(msg, keys.refreshCache):
+			case key.Matches(msg, delegateKeys.refreshCache):
 				return func() tea.Msg {
-					return refreshCacheMsg{id: selected.addon.ID}
+					err := manager.RefreshCache(selected.addon.ID)
+					if err != nil {
+						return errorMsg{err}
+					}
+					return successMsg{msg: "Cache refreshed", refreshList: true}
 				}
-			case key.Matches(msg, keys.remove):
+			case key.Matches(msg, delegateKeys.remove):
 				return func() tea.Msg {
-					return removeAddonMsg{id: selected.addon.ID}
+					err := manager.RemoveAddon(selected.addon.ID)
+					if err != nil {
+						return errorMsg{err}
+					}
+					return successMsg{msg: "Addon removed", refreshList: true}
 				}
 			}
 		}
@@ -163,17 +179,17 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 
 	d.ShortHelpFunc = func() []key.Binding {
 		return []key.Binding{
-			keys.choose,
+			delegateKeys.choose,
 		}
 	}
 
 	d.FullHelpFunc = func() [][]key.Binding {
 		return [][]key.Binding{{
-			keys.choose,
-			keys.enable,
-			keys.disable,
-			keys.refreshCache,
-			keys.remove,
+			delegateKeys.choose,
+			delegateKeys.enable,
+			delegateKeys.disable,
+			delegateKeys.refreshCache,
+			delegateKeys.remove,
 		}}
 	}
 

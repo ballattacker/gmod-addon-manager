@@ -5,7 +5,6 @@ import (
 
 	"gmod-addon-manager/addon"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -47,36 +46,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case successMsg:
 		m.error = nil
 		m.loading = false
-		// After successful operation, return to list and refresh it
-		items := []list.Item{}
-		addons, err := m.manager.GetAddonsInfo()
-		if err == nil {
-			for _, a := range addons {
-				items = append(items, addonItem{addon: a})
-			}
+		// Refresh list if requested
+		if msg.refreshList {
+			m.listModel.RefreshItems()
 		}
-		m.listModel.Update(refreshListMsg{items})
+		// Stay on current view (don't go back to list)
+		return m, nil
+
+	case requestListViewMsg:
 		m.state = "list"
+		m.error = nil
 		return m, nil
 
-	case requestViewMsg:
-		m.state = msg.view
-		if msg.view == "input" {
-			m.inputModel.Reset()
-		}
-		if msg.view == "list" {
-			m.error = nil
-		}
+	case requestInputViewMsg:
+		m.state = "input"
+		m.inputModel.Reset()
 		return m, nil
 
-	case selectAddonMsg:
-		m.detailModel.Update(msg)
+	case requestDetailViewMsg:
 		m.state = "detail"
-		return m, nil
-
-	case refreshListMsg:
-		m.listModel.Update(msg)
-		m.loading = false
+		m.detailModel.Update(msg)
 		return m, nil
 	}
 

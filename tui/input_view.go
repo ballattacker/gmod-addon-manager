@@ -46,7 +46,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.cancel):
 			return m, func() tea.Msg {
-				return requestViewMsg{view: "list"}
+				return requestListViewMsg{}
 			}
 		case key.Matches(msg, m.keys.install):
 			addonID := m.input.Value()
@@ -56,7 +56,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
+					return successMsg{msg: fmt.Sprintf("Addon %s installed successfully", addonID), refreshList: true}
 				}
 			}
 		case key.Matches(msg, m.keys.info):
@@ -67,7 +67,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return selectAddonMsg{addon: addonInfo}
+					return requestDetailViewMsg{addon: addonInfo}
 				}
 			}
 		}

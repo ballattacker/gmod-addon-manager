@@ -7,7 +7,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -39,7 +38,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.commonKeys.cancel):
 			return m, func() tea.Msg {
-				return requestViewMsg{view: "list"}
+				return requestListViewMsg{}
 			}
 		case key.Matches(msg, m.delegateKeys.enable):
 			if m.addon != nil {
@@ -48,7 +47,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{fmt.Sprintf("Addon %s enabled", m.addon.ID)}
+					return successMsg{msg: fmt.Sprintf("Addon %s enabled", m.addon.ID), refreshList: true}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.disable):
@@ -58,7 +57,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-					return successMsg{fmt.Sprintf("Addon %s disabled", m.addon.ID)}
+					return successMsg{msg: fmt.Sprintf("Addon %s disabled", m.addon.ID), refreshList: true}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.refreshCache):
@@ -68,15 +67,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-
-					items := []list.Item{}
-					addons, err := m.manager.GetAddonsInfo()
-					if err == nil {
-						for _, a := range addons {
-							items = append(items, addonItem{addon: a})
-						}
-					}
-					return refreshListMsg{items}
+					return successMsg{msg: "Cache refreshed", refreshList: true}
 				}
 			}
 		case key.Matches(msg, m.delegateKeys.remove):
@@ -86,15 +77,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						return errorMsg{err}
 					}
-
-					items := []list.Item{}
-					addons, err := m.manager.GetAddonsInfo()
-					if err == nil {
-						for _, a := range addons {
-							items = append(items, addonItem{addon: a})
-						}
-					}
-					return refreshListMsg{items}
+					return successMsg{msg: "Addon removed", refreshList: true}
 				}
 			}
 		}
@@ -102,7 +85,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 
-	case selectAddonMsg:
+	case requestDetailViewMsg:
 		m.addon = msg.addon
 	}
 
