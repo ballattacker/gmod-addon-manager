@@ -25,8 +25,8 @@ func NewInputModel(manager *addon.Manager) *InputModel {
 	input.Focus()
 
 	allowedKeys := []KeyMapEntry{
-		GlobalKeyMap.Confirm,
-		GlobalKeyMap.Info,
+		GlobalKeyMap.Install,
+		GlobalKeyMap.Detail,
 		GlobalKeyMap.Cancel,
 	}
 
@@ -47,29 +47,33 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		addonID := m.input.Value()
-		switch {
-		case key.Matches(msg, GlobalKeyMap.Cancel.Binding):
-			return m, func() tea.Msg {
-				return requestListViewMsg{}
-			}
-		case key.Matches(msg, GlobalKeyMap.Confirm.Binding):
-			if addonID != "" {
-				return m, func() tea.Msg {
-					return confirmInstallMsg{addonID: addonID}
-				}
-			}
-		case key.Matches(msg, GlobalKeyMap.Info.Binding):
-			if addonID != "" {
-				return m, func() tea.Msg {
-					return getAddonInfoMsg{addonID: addonID}
-				}
-			}
+		ctx := &KeyContext{
+			AddonID: m.input.Value(),
+		}
+		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+		if result != nil {
+			return m, func() tea.Msg { return result }
 		}
 
 	case tea.WindowSizeMsg:
 		m.input.Width = msg.Width
 		m.help.Width = msg.Width
+
+	case successMsg:
+	case requestListViewMsg:
+		m.input.Reset()
+		m.input.Focus()
+	}
+
+	// only allow numeric input for addon ID
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		if msg.Type == tea.KeyRunes {
+			for _, r := range msg.Runes {
+				if r < '0' || r > '9' {
+					return m, nil
+				}
+			}
+		}
 	}
 
 	m.input, cmd = m.input.Update(msg)
@@ -80,15 +84,10 @@ func (m *InputModel) View() string {
 	return strings.Join([]string{
 		"Install new addon",
 		m.input.View(),
-		m.help.ShortHelpView(ExtractBindings(m.allowedKeys)),
+		m.help.ShortHelpView([]key.Binding{
+			GlobalKeyMap.Install.Binding,
+			GlobalKeyMap.Detail.Binding,
+			GlobalKeyMap.Cancel.Binding,
+		}),
 	}, "\n\n")
-}
-
-func (m *InputModel) Reset() {
-	m.input.Reset()
-	m.input.Focus()
-}
-
-func (m *InputModel) Value() string {
-	return m.input.Value()
 }

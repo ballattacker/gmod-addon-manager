@@ -6,6 +6,7 @@ import (
 	"gmod-addon-manager/addon"
 
 	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -21,7 +22,7 @@ func NewDetailModel(manager *addon.Manager) *DetailModel {
 	allowedKeys := []KeyMapEntry{
 		GlobalKeyMap.Enable,
 		GlobalKeyMap.Disable,
-		GlobalKeyMap.RefreshCache,
+		GlobalKeyMap.Reload,
 		GlobalKeyMap.Remove,
 		GlobalKeyMap.Cancel,
 	}
@@ -53,6 +54,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 
+	case successMsg:
 	case requestDetailViewMsg:
 		if m.manager != nil {
 			addonInfo, err := m.manager.GetAddonInfo(msg.addonID)
@@ -84,8 +86,13 @@ func (m *DetailModel) View() string {
 			"Status: %s\n"+
 			"Installed: %t\n"+
 			"\n"+
-			m.help.ShortHelpView(ExtractBindings(m.allowedKeys)),
+			m.help.ShortHelpView([]key.Binding{
+				GlobalKeyMap.Enable.Binding,
+				GlobalKeyMap.Disable.Binding,
+				GlobalKeyMap.Reload.Binding,
+				GlobalKeyMap.Remove.Binding,
+				GlobalKeyMap.Cancel.Binding,
+			}),
 		a.Title, a.ID, a.Author, status, a.Installed,
 	)
 }
-

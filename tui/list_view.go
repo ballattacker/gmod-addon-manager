@@ -11,95 +11,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// ListModel displays and manages the addon list view
-type ListModel struct {
-	list           list.Model
-	manager        *addon.Manager
-	allowedKeys    []KeyMapEntry
-	help           help.Model
-}
-
-func NewListModel(manager *addon.Manager) *ListModel {
-	// Define the subset of keys allowed in list view
-	allowedKeys := []KeyMapEntry{
-		GlobalKeyMap.Install,
-		GlobalKeyMap.Refresh,
-		GlobalKeyMap.Quit,
-		GlobalKeyMap.View,
-		GlobalKeyMap.Enable,
-		GlobalKeyMap.Disable,
-		GlobalKeyMap.RefreshCache,
-		GlobalKeyMap.Remove,
-	}
-
-	// Create the list with custom delegate
-	addonList := list.New(buildAddonItems(manager), newItemDelegate(allowedKeys), 0, 0)
-	addonList.Title = "Garry's Mod Addons"
-	addonList.KeyMap.PrevPage = key.NewBinding(
-		key.WithKeys("left", "h", "pgup"),
-		key.WithHelp("←/h/pgup", "prev page"),
-	)
-	addonList.KeyMap.NextPage = key.NewBinding(
-		key.WithKeys("right", "l", "pgdown"),
-		key.WithHelp("→/l/pgdn", "next page"),
-	)
-	addonList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{GlobalKeyMap.Install.Binding}
-	}
-	addonList.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			GlobalKeyMap.Install.Binding,
-			GlobalKeyMap.Refresh.Binding,
-			GlobalKeyMap.Quit.Binding,
-		}
-	}
-
-	return &ListModel{
-		list:           addonList,
-		manager:        manager,
-		allowedKeys:    allowedKeys,
-		help:           help.New(),
-	}
-}
-
-func (m *ListModel) Init() tea.Cmd {
-	return nil
-}
-
-func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		ctx := &KeyContext{}
-		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
-		if result != nil {
-			return m, func() tea.Msg { return result }
-		}
-
-	case tea.WindowSizeMsg:
-		m.list.SetSize(msg.Width, msg.Height)
-		m.help.Width = msg.Width
-
-	case successMsg:
-		m.RefreshItems()
-	}
-
-	m.list, cmd = m.list.Update(msg)
-	return m, cmd
-}
-
-func (m *ListModel) RefreshItems() {
-	m.list.SetItems(buildAddonItems(m.manager))
-}
-
-func (m *ListModel) View() string {
-	if len(m.list.Items()) == 0 {
-		return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
-	}
-	return m.list.View()
-}
-
 // addonItem is a list item wrapper for addon.Addon
 type addonItem struct {
 	addon addon.Addon
@@ -132,8 +43,16 @@ func buildAddonItems(manager *addon.Manager) []list.Item {
 }
 
 // newItemDelegate creates a list delegate with key bindings for addon items
-func newItemDelegate(allowedKeys []KeyMapEntry) list.DefaultDelegate {
+func newItemDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
+
+	allowedKeys := []KeyMapEntry{
+		GlobalKeyMap.Detail,
+		GlobalKeyMap.Enable,
+		GlobalKeyMap.Disable,
+		GlobalKeyMap.Reload,
+		GlobalKeyMap.Remove,
+	}
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
 		selected, ok := m.SelectedItem().(addonItem)
@@ -157,19 +76,100 @@ func newItemDelegate(allowedKeys []KeyMapEntry) list.DefaultDelegate {
 
 	d.ShortHelpFunc = func() []key.Binding {
 		return []key.Binding{
-			GlobalKeyMap.View.Binding,
+			GlobalKeyMap.Detail.Binding,
 		}
 	}
 
 	d.FullHelpFunc = func() [][]key.Binding {
 		return [][]key.Binding{{
-			GlobalKeyMap.View.Binding,
+			GlobalKeyMap.Detail.Binding,
 			GlobalKeyMap.Enable.Binding,
 			GlobalKeyMap.Disable.Binding,
-			GlobalKeyMap.RefreshCache.Binding,
+			GlobalKeyMap.Reload.Binding,
 			GlobalKeyMap.Remove.Binding,
 		}}
 	}
 
 	return d
+}
+
+// ListModel displays and manages the addon list view
+type ListModel struct {
+	list        list.Model
+	manager     *addon.Manager
+	allowedKeys []KeyMapEntry
+	help        help.Model
+}
+
+func NewListModel(manager *addon.Manager) *ListModel {
+	// Define the subset of keys allowed in list view
+	allowedKeys := []KeyMapEntry{
+		GlobalKeyMap.Input,
+		GlobalKeyMap.Refresh,
+		GlobalKeyMap.Quit,
+	}
+
+	// Create the list with custom delegate
+	addonList := list.New(buildAddonItems(manager), newItemDelegate(), 0, 0)
+	addonList.Title = "Garry's Mod Addons"
+	addonList.KeyMap.PrevPage = key.NewBinding(
+		key.WithKeys("left", "h", "pgup"),
+		key.WithHelp("←/h/pgup", "prev page"),
+	)
+	addonList.KeyMap.NextPage = key.NewBinding(
+		key.WithKeys("right", "l", "pgdown"),
+		key.WithHelp("→/l/pgdn", "next page"),
+	)
+	addonList.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{GlobalKeyMap.Input.Binding}
+	}
+	addonList.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			GlobalKeyMap.Input.Binding,
+			GlobalKeyMap.Refresh.Binding,
+			GlobalKeyMap.Quit.Binding,
+		}
+	}
+
+	return &ListModel{
+		list:        addonList,
+		manager:     manager,
+		allowedKeys: allowedKeys,
+		help:        help.New(),
+	}
+}
+
+func (m *ListModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		ctx := &KeyContext{}
+		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+		if result != nil {
+			return m, func() tea.Msg { return result }
+		}
+
+	case tea.WindowSizeMsg:
+		m.list.SetSize(msg.Width, msg.Height)
+		m.help.Width = msg.Width
+
+	case successMsg:
+	case requestListViewMsg:
+		m.list.SetItems(buildAddonItems(m.manager))
+	}
+
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
+}
+
+func (m *ListModel) View() string {
+	if len(m.list.Items()) == 0 {
+		return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
+	}
+	return m.list.View()
 }

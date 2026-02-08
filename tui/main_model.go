@@ -49,16 +49,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errorMsg:
 		m.error = msg.err
 		m.loading = false
-		return m, nil
 
 	case successMsg:
 		m.error = nil
 		m.loading = false
-		return m, nil
 
-	case refreshListMsg:
-		m.listModel.RefreshItems()
-		return m, nil
+	case cancelMsg:
+		m.error = nil
+		m.loading = false
+		switch m.state {
+		case "list":
+			return m, tea.Quit
+		case "input":
+			return m, func() tea.Msg { return requestListViewMsg{} }
+		case "detail":
+			return m, func() tea.Msg { return requestListViewMsg{} }
+		}
 
 	case enableAddonMsg:
 		return m, func() tea.Msg {
@@ -78,13 +84,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return successMsg{fmt.Sprintf("Addon %s disabled", msg.addonID)}
 		}
 
-	case refreshCacheMsg:
+	case reloadAddonMsg:
 		return m, func() tea.Msg {
 			err := m.manager.RefreshCache(msg.addonID)
 			if err != nil {
 				return errorMsg{err}
 			}
 			return successMsg{"Cache refreshed"}
+		}
+
+	case installAddonMsg:
+		return m, func() tea.Msg {
+			err := m.manager.GetAddon(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s installed successfully", msg.addonID)}
 		}
 
 	case removeAddonMsg:
@@ -96,27 +111,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return successMsg{"Addon removed"}
 		}
 
-	case confirmInstallMsg:
-		return m, func() tea.Msg {
-			err := m.manager.GetAddon(msg.addonID)
-			if err != nil {
-				return errorMsg{err}
-			}
-			return successMsg{fmt.Sprintf("Addon %s installed successfully", msg.addonID)}
-		}
-
-	case getAddonInfoMsg:
-		return m, func() tea.Msg {
-			return requestDetailViewMsg{addonID: msg.addonID}
-		}
-
 	case requestListViewMsg:
 		m.state = "list"
+		m.listModel.Update(msg)
 		return m, nil
 
 	case requestInputViewMsg:
 		m.state = "input"
-		m.inputModel.Reset()
+		m.inputModel.Update(msg)
 		return m, nil
 
 	case requestDetailViewMsg:

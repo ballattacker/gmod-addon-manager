@@ -18,37 +18,27 @@ type KeyMapEntry struct {
 
 // KeyMap is the master registry of all keybindings and their actions
 type KeyMap struct {
-	Install      KeyMapEntry
-	Refresh      KeyMapEntry
-	Quit         KeyMapEntry
-	View         KeyMapEntry
-	Enable       KeyMapEntry
-	Disable      KeyMapEntry
-	RefreshCache KeyMapEntry
-	Remove       KeyMapEntry
-	Confirm      KeyMapEntry
-	Info         KeyMapEntry
-	Cancel       KeyMapEntry
+	Refresh KeyMapEntry
+	Quit    KeyMapEntry
+	Input   KeyMapEntry
+	Detail  KeyMapEntry
+	Enable  KeyMapEntry
+	Disable KeyMapEntry
+	Reload  KeyMapEntry
+	Install KeyMapEntry
+	Remove  KeyMapEntry
+	Cancel  KeyMapEntry
 }
 
 // GlobalKeyMap is the single master keymap with all keybindings and actions
 var GlobalKeyMap = KeyMap{
-	Install: KeyMapEntry{
-		Binding: key.NewBinding(
-			key.WithKeys("i"),
-			key.WithHelp("i", "install"),
-		),
-		Action: func(ctx *KeyContext) tea.Msg {
-			return requestInputViewMsg{}
-		},
-	},
 	Refresh: KeyMapEntry{
 		Binding: key.NewBinding(
 			key.WithKeys("r"),
 			key.WithHelp("r", "refresh"),
 		),
 		Action: func(ctx *KeyContext) tea.Msg {
-			return refreshListMsg{}
+			return successMsg{msg: "refreshing..."}
 		},
 	},
 	Quit: KeyMapEntry{
@@ -60,10 +50,19 @@ var GlobalKeyMap = KeyMap{
 			return tea.Quit()
 		},
 	},
-	View: KeyMapEntry{
+	Input: KeyMapEntry{
+		Binding: key.NewBinding(
+			key.WithKeys("s"),
+			key.WithHelp("s", "input"),
+		),
+		Action: func(ctx *KeyContext) tea.Msg {
+			return requestInputViewMsg{}
+		},
+	},
+	Detail: KeyMapEntry{
 		Binding: key.NewBinding(
 			key.WithKeys("enter", "v"),
-			key.WithHelp("enter", "view"),
+			key.WithHelp("enter", "view detail info"),
 		),
 		Action: func(ctx *KeyContext) tea.Msg {
 			return requestDetailViewMsg{addonID: ctx.AddonID}
@@ -87,13 +86,22 @@ var GlobalKeyMap = KeyMap{
 			return disableAddonMsg{addonID: ctx.AddonID}
 		},
 	},
-	RefreshCache: KeyMapEntry{
+	Reload: KeyMapEntry{
 		Binding: key.NewBinding(
 			key.WithKeys("c"),
-			key.WithHelp("c", "refresh cache"),
+			key.WithHelp("c", "reload"),
 		),
 		Action: func(ctx *KeyContext) tea.Msg {
-			return refreshCacheMsg{addonID: ctx.AddonID}
+			return reloadAddonMsg{addonID: ctx.AddonID}
+		},
+	},
+	Install: KeyMapEntry{
+		Binding: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "install"),
+		),
+		Action: func(ctx *KeyContext) tea.Msg {
+			return installAddonMsg{addonID: ctx.AddonID}
 		},
 	},
 	Remove: KeyMapEntry{
@@ -105,31 +113,13 @@ var GlobalKeyMap = KeyMap{
 			return removeAddonMsg{addonID: ctx.AddonID}
 		},
 	},
-	Confirm: KeyMapEntry{
-		Binding: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "confirm"),
-		),
-		Action: func(ctx *KeyContext) tea.Msg {
-			return confirmMsg{}
-		},
-	},
-	Info: KeyMapEntry{
-		Binding: key.NewBinding(
-			key.WithKeys("v"),
-			key.WithHelp("v", "view info"),
-		),
-		Action: func(ctx *KeyContext) tea.Msg {
-			return infoMsg{}
-		},
-	},
 	Cancel: KeyMapEntry{
 		Binding: key.NewBinding(
 			key.WithKeys("esc"),
 			key.WithHelp("esc", "cancel"),
 		),
 		Action: func(ctx *KeyContext) tea.Msg {
-			return requestListViewMsg{}
+			return cancelMsg{}
 		},
 	},
 }
@@ -144,13 +134,4 @@ func (km KeyMap) Update(msg tea.KeyMsg, allowedKeys []KeyMapEntry, ctx *KeyConte
 		}
 	}
 	return nil
-}
-
-// ExtractBindings extracts key.Binding objects from a list of KeyMapEntry
-func ExtractBindings(entries []KeyMapEntry) []key.Binding {
-	bindings := make([]key.Binding, len(entries))
-	for i, entry := range entries {
-		bindings[i] = entry.Binding
-	}
-	return bindings
 }
