@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"strings"
 
 	"gmod-addon-manager/addon"
@@ -14,23 +13,28 @@ import (
 
 // InputModel displays and manages the input view for installing addons
 type InputModel struct {
-	input   textinput.Model
-	keys    *inputKeyMap
-	help    help.Model
-	manager *addon.Manager
+	input       textinput.Model
+	allowedKeys []KeyMapEntry
+	help        help.Model
+	manager     *addon.Manager
 }
 
 func NewInputModel(manager *addon.Manager) *InputModel {
 	input := textinput.New()
 	input.Placeholder = "Enter addon ID"
 	input.Focus()
-	inputKeys := newInputKeyMap()
+
+	allowedKeys := []KeyMapEntry{
+		GlobalKeyMap.Confirm,
+		GlobalKeyMap.Info,
+		GlobalKeyMap.Cancel,
+	}
 
 	return &InputModel{
-		input:   input,
-		keys:    inputKeys,
-		help:    help.New(),
-		manager: manager,
+		input:       input,
+		allowedKeys: allowedKeys,
+		help:        help.New(),
+		manager:     manager,
 	}
 }
 
@@ -43,31 +47,22 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		addonID := m.input.Value()
 		switch {
-		case key.Matches(msg, m.keys.cancel):
+		case key.Matches(msg, GlobalKeyMap.Cancel.Binding):
 			return m, func() tea.Msg {
 				return requestListViewMsg{}
 			}
-		case key.Matches(msg, m.keys.install):
-			addonID := m.input.Value()
+		case key.Matches(msg, GlobalKeyMap.Confirm.Binding):
 			if addonID != "" {
 				return m, func() tea.Msg {
-					err := m.manager.GetAddon(addonID)
-					if err != nil {
-						return errorMsg{err}
-					}
-					return successMsg{fmt.Sprintf("Addon %s installed successfully", addonID)}
+					return confirmInstallMsg{addonID: addonID}
 				}
 			}
-		case key.Matches(msg, m.keys.info):
-			addonID := m.input.Value()
+		case key.Matches(msg, GlobalKeyMap.Info.Binding):
 			if addonID != "" {
 				return m, func() tea.Msg {
-					addonInfo, err := m.manager.GetAddonInfo(addonID)
-					if err != nil {
-						return errorMsg{err}
-					}
-					return requestDetailViewMsg{addon: addonInfo}
+					return getAddonInfoMsg{addonID: addonID}
 				}
 			}
 		}
@@ -85,11 +80,7 @@ func (m *InputModel) View() string {
 	return strings.Join([]string{
 		"Install new addon",
 		m.input.View(),
-		m.help.ShortHelpView([]key.Binding{
-			m.keys.install,
-			m.keys.info,
-			m.keys.cancel,
-		}),
+		m.help.ShortHelpView(ExtractBindings(m.allowedKeys)),
 	}, "\n\n")
 }
 

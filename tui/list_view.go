@@ -11,20 +11,27 @@ import (
 
 // ListModel displays and manages the addon list view
 type ListModel struct {
-	list         list.Model
-	manager      *addon.Manager
-	keys         *listKeyMap
-	delegateKeys *delegateKeyMap
-	commonKeys   *commonKeyMap
-	help         help.Model
+	list           list.Model
+	manager        *addon.Manager
+	allowedKeys    []KeyMapEntry
+	help           help.Model
 }
 
 func NewListModel(manager *addon.Manager) *ListModel {
+	// Define the subset of keys allowed in list view
+	allowedKeys := []KeyMapEntry{
+		GlobalKeyMap.Install,
+		GlobalKeyMap.Refresh,
+		GlobalKeyMap.Quit,
+		GlobalKeyMap.View,
+		GlobalKeyMap.Enable,
+		GlobalKeyMap.Disable,
+		GlobalKeyMap.RefreshCache,
+		GlobalKeyMap.Remove,
+	}
+
 	// Create the list with custom delegate
-	keys := newListKeyMap()
-	delegateKeys := newDelegateKeyMap()
-	commonKeys := newCommonKeyMap()
-	addonList := list.New(buildAddonItems(manager), newItemDelegate(delegateKeys, manager), 0, 0)
+	addonList := list.New(buildAddonItems(manager), newItemDelegate(allowedKeys, manager), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.KeyMap.PrevPage = key.NewBinding(
 		key.WithKeys("left", "h", "pgup"),
@@ -35,25 +42,21 @@ func NewListModel(manager *addon.Manager) *ListModel {
 		key.WithHelp("→/l/pgdn", "next page"),
 	)
 	addonList.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			keys.installItem,
-		}
+		return []key.Binding{GlobalKeyMap.Install.Binding}
 	}
 	addonList.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{
-			keys.installItem,
-			keys.refreshList,
-			keys.quit,
+			GlobalKeyMap.Install.Binding,
+			GlobalKeyMap.Refresh.Binding,
+			GlobalKeyMap.Quit.Binding,
 		}
 	}
 
 	return &ListModel{
-		list:         addonList,
-		manager:      manager,
-		keys:         keys,
-		delegateKeys: delegateKeys,
-		commonKeys:   commonKeys,
-		help:         help.New(),
+		list:           addonList,
+		manager:        manager,
+		allowedKeys:    allowedKeys,
+		help:           help.New(),
 	}
 }
 
@@ -66,15 +69,10 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, m.keys.quit):
-			return m, tea.Quit
-		case key.Matches(msg, m.keys.installItem):
-			return m, func() tea.Msg {
-				return requestInputViewMsg{}
-			}
-		case key.Matches(msg, m.keys.refreshList):
-			m.RefreshItems()
+		ctx := &KeyContext{}
+		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+		if result != nil {
+			return m, func() tea.Msg { return result }
 		}
 
 	case tea.WindowSizeMsg:

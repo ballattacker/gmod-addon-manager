@@ -56,6 +56,60 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		return m, nil
 
+	case refreshListMsg:
+		m.listModel.RefreshItems()
+		return m, nil
+
+	case enableAddonMsg:
+		return m, func() tea.Msg {
+			err := m.manager.EnableAddon(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s enabled", msg.addonID)}
+		}
+
+	case disableAddonMsg:
+		return m, func() tea.Msg {
+			err := m.manager.DisableAddon(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s disabled", msg.addonID)}
+		}
+
+	case refreshCacheMsg:
+		return m, func() tea.Msg {
+			err := m.manager.RefreshCache(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{"Cache refreshed"}
+		}
+
+	case removeAddonMsg:
+		return m, func() tea.Msg {
+			err := m.manager.RemoveAddon(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{"Addon removed"}
+		}
+
+	case confirmInstallMsg:
+		return m, func() tea.Msg {
+			err := m.manager.GetAddon(msg.addonID)
+			if err != nil {
+				return errorMsg{err}
+			}
+			return successMsg{fmt.Sprintf("Addon %s installed successfully", msg.addonID)}
+		}
+
+	case getAddonInfoMsg:
+		return m, func() tea.Msg {
+			return requestDetailViewMsg{addonID: msg.addonID}
+		}
+
 	case requestListViewMsg:
 		m.state = "list"
 		return m, nil
