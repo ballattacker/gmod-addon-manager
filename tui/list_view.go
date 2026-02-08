@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+
 	"gmod-addon-manager/addon"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -31,7 +33,7 @@ func NewListModel(manager *addon.Manager) *ListModel {
 	}
 
 	// Create the list with custom delegate
-	addonList := list.New(buildAddonItems(manager), newItemDelegate(allowedKeys, manager), 0, 0)
+	addonList := list.New(buildAddonItems(manager), newItemDelegate(allowedKeys), 0, 0)
 	addonList.Title = "Garry's Mod Addons"
 	addonList.KeyMap.PrevPage = key.NewBinding(
 		key.WithKeys("left", "h", "pgup"),
@@ -91,6 +93,32 @@ func (m *ListModel) RefreshItems() {
 	m.list.SetItems(buildAddonItems(m.manager))
 }
 
+func (m *ListModel) View() string {
+	if len(m.list.Items()) == 0 {
+		return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
+	}
+	return m.list.View()
+}
+
+// addonItem is a list item wrapper for addon.Addon
+type addonItem struct {
+	addon addon.Addon
+}
+
+func (i addonItem) Title() string {
+	return fmt.Sprintf("%s - %s", i.addon.ID, i.addon.Title)
+}
+
+func (i addonItem) Description() string {
+	status := "❌ Disabled"
+	if i.addon.Enabled {
+		status = "✅ Enabled"
+	}
+	return status
+}
+
+func (i addonItem) FilterValue() string { return i.addon.Title }
+
 // buildAddonItems creates list items from addon manager data
 func buildAddonItems(manager *addon.Manager) []list.Item {
 	items := []list.Item{}
@@ -103,9 +131,45 @@ func buildAddonItems(manager *addon.Manager) []list.Item {
 	return items
 }
 
-func (m *ListModel) View() string {
-	if len(m.list.Items()) == 0 {
-		return "No addons installed.\n\nPress [i] to install a new addon or [q] to quit."
+// newItemDelegate creates a list delegate with key bindings for addon items
+func newItemDelegate(allowedKeys []KeyMapEntry) list.DefaultDelegate {
+	d := list.NewDefaultDelegate()
+
+	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
+		selected, ok := m.SelectedItem().(addonItem)
+		if !ok {
+			return nil
+		}
+
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			ctx := &KeyContext{
+				AddonID: selected.addon.ID,
+			}
+			result := GlobalKeyMap.Update(msg, allowedKeys, ctx)
+			if result != nil {
+				return func() tea.Msg { return result }
+			}
+		}
+
+		return nil
 	}
-	return m.list.View()
+
+	d.ShortHelpFunc = func() []key.Binding {
+		return []key.Binding{
+			GlobalKeyMap.View.Binding,
+		}
+	}
+
+	d.FullHelpFunc = func() [][]key.Binding {
+		return [][]key.Binding{{
+			GlobalKeyMap.View.Binding,
+			GlobalKeyMap.Enable.Binding,
+			GlobalKeyMap.Disable.Binding,
+			GlobalKeyMap.RefreshCache.Binding,
+			GlobalKeyMap.Remove.Binding,
+		}}
+	}
+
+	return d
 }

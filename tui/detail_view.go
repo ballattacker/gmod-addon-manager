@@ -89,6 +89,3 @@ func (m *DetailModel) View() string {
 	)
 }
 
-func (m *DetailModel) SetAddon(addon *addon.Addon) {
-	m.addon = addon
-}
