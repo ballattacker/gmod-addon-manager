@@ -38,6 +38,15 @@ func (m *DetailModel) Init() tea.Cmd {
 	return nil
 }
 
+func (m *DetailModel) updateAddonInfo(addonID string) {
+	if m.manager != nil {
+		addonInfo, err := m.manager.GetAddonInfo(addonID)
+		if err == nil {
+			m.addon = addonInfo
+		}
+	}
+}
+
 func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -55,13 +64,10 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help.Width = msg.Width
 
 	case successMsg:
+		m.updateAddonInfo(m.addon.ID)
+
 	case requestDetailViewMsg:
-		if m.manager != nil {
-			addonInfo, err := m.manager.GetAddonInfo(msg.addonID)
-			if err == nil {
-				m.addon = addonInfo
-			}
-		}
+		m.updateAddonInfo(msg.addonID)
 	}
 
 	return m, nil

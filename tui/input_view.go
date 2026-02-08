@@ -59,8 +59,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.input.Width = msg.Width
 		m.help.Width = msg.Width
 
-	case successMsg:
-	case requestListViewMsg:
+	case successMsg, requestListViewMsg:
 		m.input.Reset()
 		m.input.Focus()
 	}

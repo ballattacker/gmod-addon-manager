@@ -158,8 +158,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetSize(msg.Width, msg.Height)
 		m.help.Width = msg.Width
 
-	case successMsg:
-	case requestListViewMsg:
+	case successMsg, requestListViewMsg:
 		m.list.SetItems(buildAddonItems(m.manager))
 	}
 
