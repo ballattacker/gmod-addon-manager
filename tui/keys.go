@@ -125,8 +125,8 @@ var GlobalKeyMap = KeyMap{
 }
 
 // Update processes a key message against a subset of keys and executes the corresponding action
-func (km KeyMap) Update(msg tea.KeyMsg, allowedKeys []KeyMapEntry, ctx *KeyContext) tea.Msg {
-	for _, entry := range allowedKeys {
+func (km KeyMap) Update(msg tea.KeyMsg, keyMaps []KeyMapEntry, ctx *KeyContext) tea.Msg {
+	for _, entry := range keyMaps {
 		if key.Matches(msg, entry.Binding) {
 			if entry.Action != nil {
 				return entry.Action(ctx)

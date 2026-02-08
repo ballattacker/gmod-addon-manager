@@ -46,7 +46,7 @@ func buildAddonItems(manager *addon.Manager) []list.Item {
 func newItemDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 
-	allowedKeys := []KeyMapEntry{
+	keyMaps := []KeyMapEntry{
 		GlobalKeyMap.Detail,
 		GlobalKeyMap.Enable,
 		GlobalKeyMap.Disable,
@@ -65,7 +65,7 @@ func newItemDelegate() list.DefaultDelegate {
 			ctx := &KeyContext{
 				AddonID: selected.addon.ID,
 			}
-			result := GlobalKeyMap.Update(msg, allowedKeys, ctx)
+			result := GlobalKeyMap.Update(msg, keyMaps, ctx)
 			if result != nil {
 				return func() tea.Msg { return result }
 			}
@@ -95,15 +95,15 @@ func newItemDelegate() list.DefaultDelegate {
 
 // ListModel displays and manages the addon list view
 type ListModel struct {
-	list        list.Model
-	manager     *addon.Manager
-	allowedKeys []KeyMapEntry
-	help        help.Model
+	list    list.Model
+	manager *addon.Manager
+	keyMaps []KeyMapEntry
+	help    help.Model
 }
 
 func NewListModel(manager *addon.Manager) *ListModel {
 	// Define the subset of keys allowed in list view
-	allowedKeys := []KeyMapEntry{
+	keyMaps := []KeyMapEntry{
 		GlobalKeyMap.Input,
 		GlobalKeyMap.Refresh,
 		GlobalKeyMap.Quit,
@@ -132,10 +132,10 @@ func NewListModel(manager *addon.Manager) *ListModel {
 	}
 
 	return &ListModel{
-		list:        addonList,
-		manager:     manager,
-		allowedKeys: allowedKeys,
-		help:        help.New(),
+		list:    addonList,
+		manager: manager,
+		keyMaps: keyMaps,
+		help:    help.New(),
 	}
 }
 
@@ -149,7 +149,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		ctx := &KeyContext{}
-		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+		result := GlobalKeyMap.Update(msg, m.keyMaps, ctx)
 		if result != nil {
 			return m, func() tea.Msg { return result }
 		}

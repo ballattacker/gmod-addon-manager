@@ -12,14 +12,14 @@ import (
 
 // DetailModel displays and manages the detail view for a selected addon
 type DetailModel struct {
-	addon       *addon.Addon
-	allowedKeys []KeyMapEntry
-	help        help.Model
-	manager     *addon.Manager
+	addon   *addon.Addon
+	keyMaps []KeyMapEntry
+	help    help.Model
+	manager *addon.Manager
 }
 
 func NewDetailModel(manager *addon.Manager) *DetailModel {
-	allowedKeys := []KeyMapEntry{
+	keyMaps := []KeyMapEntry{
 		GlobalKeyMap.Enable,
 		GlobalKeyMap.Disable,
 		GlobalKeyMap.Reload,
@@ -28,9 +28,9 @@ func NewDetailModel(manager *addon.Manager) *DetailModel {
 	}
 
 	return &DetailModel{
-		allowedKeys: allowedKeys,
-		help:        help.New(),
-		manager:     manager,
+		keyMaps: keyMaps,
+		help:    help.New(),
+		manager: manager,
 	}
 }
 
@@ -45,7 +45,7 @@ func (m *DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			ctx := &KeyContext{
 				AddonID: m.addon.ID,
 			}
-			result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+			result := GlobalKeyMap.Update(msg, m.keyMaps, ctx)
 			if result != nil {
 				return m, func() tea.Msg { return result }
 			}

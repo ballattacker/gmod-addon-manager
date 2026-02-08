@@ -13,10 +13,10 @@ import (
 
 // InputModel displays and manages the input view for installing addons
 type InputModel struct {
-	input       textinput.Model
-	allowedKeys []KeyMapEntry
-	help        help.Model
-	manager     *addon.Manager
+	input   textinput.Model
+	keyMaps []KeyMapEntry
+	help    help.Model
+	manager *addon.Manager
 }
 
 func NewInputModel(manager *addon.Manager) *InputModel {
@@ -24,17 +24,17 @@ func NewInputModel(manager *addon.Manager) *InputModel {
 	input.Placeholder = "Enter addon ID"
 	input.Focus()
 
-	allowedKeys := []KeyMapEntry{
+	keyMaps := []KeyMapEntry{
 		GlobalKeyMap.Install,
 		GlobalKeyMap.Detail,
 		GlobalKeyMap.Cancel,
 	}
 
 	return &InputModel{
-		input:       input,
-		allowedKeys: allowedKeys,
-		help:        help.New(),
-		manager:     manager,
+		input:   input,
+		keyMaps: keyMaps,
+		help:    help.New(),
+		manager: manager,
 	}
 }
 
@@ -50,7 +50,7 @@ func (m *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		ctx := &KeyContext{
 			AddonID: m.input.Value(),
 		}
-		result := GlobalKeyMap.Update(msg, m.allowedKeys, ctx)
+		result := GlobalKeyMap.Update(msg, m.keyMaps, ctx)
 		if result != nil {
 			return m, func() tea.Msg { return result }
 		}
