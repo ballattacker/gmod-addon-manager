@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -233,7 +234,10 @@ func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 	var addonIDsMap = make(map[string]struct{})
 
 	for _, dir := range []string{m.config.OutDir, m.config.DownloadDir} {
-		// Read the out directory to find installed addons
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			continue
+		}
+
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read directory: %w", err)

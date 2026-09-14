@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gmod-addon-manager/addon"
@@ -20,6 +22,15 @@ func main() {
 		fmt.Printf("Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
+
+	logPath := filepath.Join(os.TempDir(), "gmod-addon-manager.log")
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
+	logger := slog.New(slog.NewJSONHandler(logFile, nil))
+	slog.SetDefault(logger)
 
 	addonManager, err := addon.NewManager(cfg)
 	if err != nil {
