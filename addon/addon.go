@@ -229,19 +229,31 @@ func (m *Manager) RefreshCache(id string) error {
 
 func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 	var addons []Addon
+	var addonIDs []string
+	var addonIDsMap = make(map[string]struct{})
 
-	// Read the out directory to find installed addons
-	entries, err := os.ReadDir(m.config.OutDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read out directory: %w", err)
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
+	for _, dir := range []string{m.config.OutDir, m.config.DownloadDir} {
+		// Read the out directory to find installed addons
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read directory: %w", err)
 		}
 
-		addonID := entry.Name()
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+
+			addonID := entry.Name()
+
+			if _, exists := addonIDsMap[addonID]; !exists {
+				addonIDsMap[addonID] = struct{}{}
+				addonIDs = append(addonIDs, addonID)
+			}
+		}
+	}
+
+	for _, addonID := range addonIDs {
 		// Get addon info using the existing GetAddonInfo method
 		addonInfo, err := m.GetAddonInfo(addonID)
 		if err != nil {
@@ -259,10 +271,7 @@ func (m *Manager) GetAddonsInfo() ([]Addon, error) {
 			continue
 		}
 
-		// Only include installed addons in the list
-		if addonInfo.Installed {
-			addons = append(addons, *addonInfo)
-		}
+		addons = append(addons, *addonInfo)
 	}
 
 	return addons, nil
