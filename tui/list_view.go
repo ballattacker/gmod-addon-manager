@@ -51,6 +51,7 @@ func newItemDelegate() list.DefaultDelegate {
 		GlobalKeyMap.Enable,
 		GlobalKeyMap.Disable,
 		GlobalKeyMap.Reload,
+		GlobalKeyMap.Install,
 		GlobalKeyMap.Remove,
 	}
 
@@ -86,6 +87,7 @@ func newItemDelegate() list.DefaultDelegate {
 			GlobalKeyMap.Enable.Binding,
 			GlobalKeyMap.Disable.Binding,
 			GlobalKeyMap.Reload.Binding,
+			GlobalKeyMap.Install.Binding,
 			GlobalKeyMap.Remove.Binding,
 		}}
 	}
