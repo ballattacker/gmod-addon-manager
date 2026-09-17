@@ -56,26 +56,27 @@ func (m *Manager) log(message string) {
 }
 
 func (m *Manager) GetAddon(id string) error {
-	// Run steamcmd to get the addon with output
-	steamCmd := exec.Command(
-		m.config.SteamCmdPath,
-		"+login", "anonymous",
-		"+workshop_download_item", "4000", id,
-		"+quit",
-	)
-
-	// Set up output pipes to capture and display SteamCMD output
-	steamCmd.Stdout = os.Stdout
-	steamCmd.Stderr = os.Stderr
-
-	m.log(fmt.Sprintf("Downloading addon %s...", id))
-	if err := steamCmd.Run(); err != nil {
-		return fmt.Errorf("failed to run steamcmd: %w", err)
-	}
-	m.log("Download completed.")
-
-	// Find the downloaded file
 	downloadDir := filepath.Join(m.config.DownloadDir, id)
+	outDir := filepath.Join(m.config.OutDir, id)
+	tmpDir := filepath.Join(m.config.TmpDir, id)
+
+	if _, err := os.Stat(downloadDir); os.IsNotExist(err) {
+		steamCmd := exec.Command(
+			m.config.SteamCmdPath,
+			"+login", "anonymous",
+			"+workshop_download_item", "4000", id,
+			"+quit",
+		)
+
+		steamCmd.Stdout = os.Stdout
+		steamCmd.Stderr = os.Stderr
+
+		m.log(fmt.Sprintf("Downloading addon %s...", id))
+		if err := steamCmd.Run(); err != nil {
+			return fmt.Errorf("failed to run steamcmd: %w", err)
+		}
+		m.log("Download completed.")
+	}
 
 	// Get the first file (should be either .gma or _legacy.bin)
 	downloadedFileName, err := file.First(downloadDir)
@@ -84,47 +85,47 @@ func (m *Manager) GetAddon(id string) error {
 	}
 	downloadedFilePath := filepath.Join(downloadDir, downloadedFileName)
 
-	// Create output directory
-	outDir := filepath.Join(m.config.OutDir, id)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
-
-	// Create tmp directory
-	tmpDir := filepath.Join(m.config.TmpDir, id)
-	if err := os.MkdirAll(tmpDir, 0755); err != nil {
-		return fmt.Errorf("failed to create tmp directory: %w", err)
-	}
-
-	gmaPath := filepath.Join(tmpDir, id+".gma")
-
-	// Handle .bin file (extract and rename to .gma)
-	if strings.HasSuffix(downloadedFileName, "_legacy.bin") {
-		if err := file.ExtractLZMA(downloadedFilePath, gmaPath); err != nil {
-			return fmt.Errorf("failed to extract bin file: %w", err)
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(outDir, 0755); err != nil {
+			return fmt.Errorf("failed to create output directory: %w", err)
 		}
-	} else if strings.HasSuffix(downloadedFileName, ".gma") {
-		// gmaPath = downloadedFilePath
-		if err := file.Copy(downloadedFilePath, gmaPath); err != nil {
-			return fmt.Errorf("failed to copy gma file: %w", err)
+
+		gmaPath := filepath.Join(tmpDir, id+".gma")
+
+		if _, err := os.Stat(tmpDir); os.IsNotExist(err) {
+			if err := os.MkdirAll(tmpDir, 0755); err != nil {
+				return fmt.Errorf("failed to create tmp directory: %w", err)
+			}
+
+			// Handle .bin file (extract and rename to .gma)
+			if strings.HasSuffix(downloadedFileName, "_legacy.bin") {
+				if err := file.ExtractLZMA(downloadedFilePath, gmaPath); err != nil {
+					return fmt.Errorf("failed to extract bin file: %w", err)
+				}
+			} else if strings.HasSuffix(downloadedFileName, ".gma") {
+				// gmaPath = downloadedFilePath
+				if err := file.Copy(downloadedFilePath, gmaPath); err != nil {
+					return fmt.Errorf("failed to copy gma file: %w", err)
+				}
+			} else {
+				return fmt.Errorf("unknown file type: %s", downloadedFileName)
+			}
 		}
-	} else {
-		return fmt.Errorf("unknown file type: %s", downloadedFileName)
-	}
 
-	// Execute GMAD tool to extract directly to output directory
-	gmadCmd := exec.Command(
-		m.config.GMADPath,
-		"extract",
-		"-file", gmaPath,
-		"-out", outDir,
-	)
+		// Execute GMAD tool to extract directly to output directory
+		gmadCmd := exec.Command(
+			m.config.GMADPath,
+			"extract",
+			"-file", gmaPath,
+			"-out", outDir,
+		)
 
-	m.log(fmt.Sprintf("Extracting addon %s...", id))
-	if err := gmadCmd.Run(); err != nil {
-		return fmt.Errorf("failed to run gmad: %w", err)
+		m.log(fmt.Sprintf("Extracting addon %s...", id))
+		if err := gmadCmd.Run(); err != nil {
+			return fmt.Errorf("failed to run gmad: %w", err)
+		}
+		m.log("Extraction completed.")
 	}
-	m.log("Extraction completed.")
 
 	m.EnableAddon(id)
 
